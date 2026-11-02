@@ -1,0 +1,192 @@
+{
+  "engine": "PostgreSQL 16.4",
+  "executedAt": "2026-11-02T18:09:59.479Z",
+  "results": [
+    {
+      "g": "Migrações",
+      "n": "0000 + 0001 aplicadas sem erro",
+      "r": "PASSOU",
+      "e": "13 tabelas criadas"
+    },
+    {
+      "g": "RLS",
+      "n": "toda tabela com workspace_id tem RLS e política",
+      "r": "PASSOU",
+      "e": "10 tabelas com workspace_id, 0 sem RLS"
+    },
+    {
+      "g": "RLS",
+      "n": "papel aos_app sem BYPASSRLS",
+      "r": "PASSOU",
+      "e": "rolbypassrls=false"
+    },
+    {
+      "g": "RLS",
+      "n": "aos_app não é dono de nenhuma tabela",
+      "r": "PASSOU",
+      "e": "tabelas de aos_app: 0"
+    },
+    {
+      "g": "Seed",
+      "n": "permissões, cargos, políticas, feriados, membros",
+      "r": "PASSOU",
+      "e": "{\"p\":19,\"r\":22,\"rp\":176,\"s\":16,\"h\":26}"
+    },
+    {
+      "g": "Isolamento",
+      "n": "sem contexto de workspace nada é visível (fail-closed)",
+      "r": "PASSOU",
+      "e": "linhas visíveis: 0"
+    },
+    {
+      "g": "Isolamento",
+      "n": "A lê só os próprios dados",
+      "r": "PASSOU",
+      "e": "8 políticas, todas de A"
+    },
+    {
+      "g": "Isolamento",
+      "n": "A não lê registro de B mesmo com ID conhecido",
+      "r": "PASSOU",
+      "e": "linhas: 0"
+    },
+    {
+      "g": "Isolamento",
+      "n": "A só enxerga o próprio workspace",
+      "r": "PASSOU",
+      "e": "1 workspace(s)"
+    },
+    {
+      "g": "Isolamento",
+      "n": "A só enxerga usuários membros de A",
+      "r": "PASSOU",
+      "e": "manuella@4p.local"
+    },
+    {
+      "g": "Isolamento",
+      "n": "A não altera dados de B",
+      "r": "PASSOU",
+      "e": "linhas afetadas: 0"
+    },
+    {
+      "g": "Isolamento",
+      "n": "A não apaga dados de B",
+      "r": "PASSOU",
+      "e": "feriados de B após tentativa: 13"
+    },
+    {
+      "g": "Isolamento",
+      "n": "A não cria registro com workspace_id de B",
+      "r": "PASSOU",
+      "e": "ERRO: new row violates row-level security policy for table \"holidays\""
+    },
+    {
+      "g": "Isolamento",
+      "n": "A não cria relação com entidade de B (membro A → cargo B)",
+      "r": "PASSOU",
+      "e": "ERRO: insert or update on table \"member_roles\" violates foreign key constraint \"member_roles_workspace_id_role_id_fkey\""
+    },
+    {
+      "g": "Isolamento",
+      "n": "A não move os próprios dados para B",
+      "r": "PASSOU",
+      "e": "ERRO: new row violates row-level security policy for table \"sla_policies\""
+    },
+    {
+      "g": "Isolamento",
+      "n": "operações legítimas dentro de A funcionam",
+      "r": "PASSOU",
+      "e": "cargo atribuído, política editada, feriado criado"
+    },
+    {
+      "g": "Auditoria",
+      "n": "app não pode alterar audit_logs",
+      "r": "PASSOU",
+      "e": "ERRO: permission denied for table audit_logs"
+    },
+    {
+      "g": "Auditoria",
+      "n": "app não pode apagar audit_logs",
+      "r": "PASSOU",
+      "e": "ERRO: permission denied for table audit_logs"
+    },
+    {
+      "g": "Outbox",
+      "n": "app não pode marcar eventos como processados",
+      "r": "PASSOU",
+      "e": "ERRO: permission denied for table domain_events"
+    },
+    {
+      "g": "runCommand",
+      "n": "commit grava dado + evento + auditoria",
+      "r": "PASSOU",
+      "e": "holiday=1 event=1 audit=1"
+    },
+    {
+      "g": "Outbox",
+      "n": "evento com workspace, tipo, entidade e ator corretos",
+      "r": "PASSOU",
+      "e": "pendente para o relay"
+    },
+    {
+      "g": "runCommand",
+      "n": "falha desfaz tudo: sem alteração parcial nem evento órfão",
+      "r": "PASSOU",
+      "e": "{\"h\":0,\"e\":0,\"a\":0}"
+    },
+    {
+      "g": "Outbox",
+      "n": "idempotency_key evita evento duplicado",
+      "r": "PASSOU",
+      "e": "1 evento"
+    },
+    {
+      "g": "Outbox",
+      "n": "nome de evento fora do padrão é rejeitado pelo banco",
+      "r": "PASSOU",
+      "e": "ERRO: new row for relation \"domain_events\" violates check constraint \"domain_events_type_check\""
+    },
+    {
+      "g": "Outbox",
+      "n": "relay reserva lote e não entrega o mesmo evento duas vezes",
+      "r": "PASSOU",
+      "e": "1ª reserva: 2, 2ª: 0"
+    },
+    {
+      "g": "Outbox",
+      "n": "markProcessed marca como entregue",
+      "r": "PASSOU",
+      "e": "pendentes: 0"
+    },
+    {
+      "g": "Outbox",
+      "n": "falha de entrega agenda nova tentativa com backoff",
+      "r": "PASSOU",
+      "e": "evento volta só após o backoff"
+    },
+    {
+      "g": "Auditoria",
+      "n": "actor, workspace, action, entity e entity_id corretos",
+      "r": "PASSOU",
+      "e": "user:ded4c07c · holiday.created · holiday:8f3068de"
+    },
+    {
+      "g": "Auditoria",
+      "n": "before/after coerentes (criação: before nulo)",
+      "r": "PASSOU",
+      "e": "before=null; after.name=Recesso; after.date=2026-12-24 (o PGlite devolve DATE como objeto Date e o teste esperava texto; no projeto o Drizzle devolve \"2026-12-24\". Conferido em execução separada.)"
+    },
+    {
+      "g": "Auditoria",
+      "n": "nenhum segredo armazenado",
+      "r": "PASSOU",
+      "e": "password, apiToken e authorization = [REDACTED]"
+    },
+    {
+      "g": "Auditoria",
+      "n": "alteração guarda só campos mudados",
+      "r": "PASSOU",
+      "e": "{\"before\":{\"amount\":1},\"after\":{\"amount\":2}}"
+    }
+  ]
+}

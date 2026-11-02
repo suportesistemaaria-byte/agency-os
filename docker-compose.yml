@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aos_owner
+      POSTGRES_PASSWORD: aos_owner
+      POSTGRES_DB: agency_os
+    ports: ['5432:5432']
+    volumes: ['pgdata:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U aos_owner -d agency_os']
+      interval: 2s
+      retries: 30
+volumes:
+  pgdata:

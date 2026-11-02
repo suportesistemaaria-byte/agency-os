@@ -1,0 +1,19 @@
+# Deploy: a Vercel faz preview por PR e produção a partir de main (integração Git).
+# Este workflow só aplica as migrações ANTES do deploy de produção (expand → migrate → contract).
+name: Migrate production
+on:
+  push:
+    branches: [main]
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+        env:
+          DATABASE_ADMIN_URL: ${{ secrets.DATABASE_ADMIN_URL }}

@@ -1,0 +1,37 @@
+{
+  "name": "@aos/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src scripts",
+    "test": "vitest run --passWithNoTests",
+    "test:integration": "vitest run --config vitest.int.config.ts",
+    "roles": "tsx scripts/roles.ts",
+    "migrate": "tsx scripts/migrate.ts",
+    "seed": "tsx scripts/seed.ts",
+    "reset": "tsx scripts/reset.ts && pnpm roles && pnpm migrate && pnpm seed",
+    "generate": "drizzle-kit generate",
+    "check": "drizzle-kit check",
+    "studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@aos/sla": "workspace:*",
+    "drizzle-orm": "^0.36.4",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "@types/node": "^22.9.0",
+    "drizzle-kit": "^0.28.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

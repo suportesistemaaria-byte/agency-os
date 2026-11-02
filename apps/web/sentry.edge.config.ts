@@ -1,0 +1,9 @@
+import * as Sentry from '@sentry/nextjs';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  enabled: Boolean(process.env.SENTRY_DSN),
+  environment: process.env.APP_ENV ?? process.env.NEXT_PUBLIC_APP_ENV ?? 'local',
+  tracesSampleRate: 0.1,
+  sendDefaultPii: false,
+});

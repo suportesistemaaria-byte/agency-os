@@ -1,0 +1,36 @@
+{
+  "name": "agency-os",
+  "private": true,
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@aos/web",
+    "dev:jobs": "pnpm dlx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:integration && pnpm build",
+    "db:up": "docker compose up -d postgres",
+    "db:roles": "pnpm --filter @aos/db roles",
+    "db:migrate": "pnpm --filter @aos/db migrate",
+    "db:seed": "pnpm --filter @aos/db seed",
+    "db:reset": "pnpm --filter @aos/db reset",
+    "db:studio": "pnpm --filter @aos/db studio"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "eslint": "^9.15.0",
+    "typescript-eslint": "^8.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}
