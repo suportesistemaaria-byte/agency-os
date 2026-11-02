@@ -27,7 +27,10 @@ function formatter(tz: string): Intl.DateTimeFormat {
   return f;
 }
 
-function parts(instant: Date, tz: string): { y: number; m: number; d: number; h: number; mi: number; s: number } {
+function parts(
+  instant: Date,
+  tz: string,
+): { y: number; m: number; d: number; h: number; mi: number; s: number } {
   const out: Record<string, number> = {};
   for (const p of formatter(tz).formatToParts(instant)) {
     if (p.type !== 'literal') out[p.type] = Number(p.value);

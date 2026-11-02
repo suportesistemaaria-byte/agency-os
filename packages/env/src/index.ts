@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-const optional = z.string().trim().min(1).optional().or(z.literal('').transform(() => undefined));
+const optional = z
+  .string()
+  .trim()
+  .min(1)
+  .optional()
+  .or(z.literal('').transform(() => undefined));
 
 /** Variáveis do servidor. Nunca importe este módulo em código de navegador. */
 export const serverSchema = z.object({

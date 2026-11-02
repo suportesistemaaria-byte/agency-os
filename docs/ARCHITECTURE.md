@@ -61,10 +61,10 @@ Persistência dos relógios (`sla_clocks`, `sla_intervals`) entra na Sprint 4, j
 
 ## Ambientes
 
-| Ambiente | Banco | Deploy |
-|---|---|---|
-| local | Docker Postgres 16 | `pnpm dev` |
-| ci | serviço Postgres do GitHub Actions | `pnpm verify` |
-| preview | branch Neon por PR | Vercel preview |
-| staging | branch Neon `staging` | Vercel (branch staging) |
-| production | Neon `main` | Vercel (main) após `migrate` |
+| Ambiente   | Banco                              | Deploy                       |
+| ---------- | ---------------------------------- | ---------------------------- |
+| local      | Docker Postgres 16                 | `pnpm dev`                   |
+| ci         | serviço Postgres do GitHub Actions | `pnpm verify`                |
+| preview    | branch Neon por PR                 | Vercel preview               |
+| staging    | branch Neon `staging`              | Vercel (branch staging)      |
+| production | Neon `main`                        | Vercel (main) após `migrate` |

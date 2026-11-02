@@ -12,7 +12,10 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-console': ['error', { allow: ['warn', 'error'] }],
       // Regras de arquitetura: domínios não importam o banco de outros domínios diretamente.
-      'no-restricted-imports': ['error', { patterns: [{ group: ['@aos/*/src/*'], message: 'Importe pelo index público do pacote.' }] }],
+      'no-restricted-imports': [
+        'error',
+        { patterns: [{ group: ['@aos/*/src/*'], message: 'Importe pelo index público do pacote.' }] },
+      ],
     },
   },
   { files: ['**/scripts/**', '**/*.test.ts'], rules: { 'no-console': 'off' } },

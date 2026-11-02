@@ -25,7 +25,9 @@ export const domainEvents = pgTable(
     lastError: text('last_error'),
   },
   (t) => [
-    index('domain_events_pending').on(t.availableAt).where(sql`processed_at IS NULL`),
+    index('domain_events_pending')
+      .on(t.availableAt)
+      .where(sql`processed_at IS NULL`),
     index('domain_events_entity').on(t.workspaceId, t.entityType, t.entityId),
     unique('domain_events_idem').on(t.workspaceId, t.idempotencyKey),
   ],

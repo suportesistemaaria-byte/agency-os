@@ -14,6 +14,8 @@ await client.query(
     ? `ALTER ROLE aos_app WITH LOGIN NOBYPASSRLS PASSWORD ${pwd}`
     : `CREATE ROLE aos_app WITH LOGIN NOBYPASSRLS PASSWORD ${pwd}`,
 );
-await client.query('GRANT CONNECT ON DATABASE ' + client.escapeIdentifier(client.database ?? 'postgres') + ' TO aos_app');
+await client.query(
+  'GRANT CONNECT ON DATABASE ' + client.escapeIdentifier(client.database ?? 'postgres') + ' TO aos_app',
+);
 console.log('Papel aos_app pronto.');
 await client.end();

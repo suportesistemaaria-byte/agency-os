@@ -27,12 +27,17 @@ export const workspaceMembers = pgTable(
   {
     id: id(),
     workspaceId: workspaceId().references(() => workspaces.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id').notNull().references(() => users.id),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
     status: memberStatus('status').notNull().default('active'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [unique('workspace_members_ws_user').on(t.workspaceId, t.userId), unique('workspace_members_ws_id').on(t.workspaceId, t.id)],
+  (t) => [
+    unique('workspace_members_ws_user').on(t.workspaceId, t.userId),
+    unique('workspace_members_ws_id').on(t.workspaceId, t.id),
+  ],
 );
 
 /** Catálogo global de permissões (modulo.acao). Não pertence a workspace. */
@@ -61,12 +66,17 @@ export const rolePermissions = pgTable(
   {
     workspaceId: workspaceId(),
     roleId: uuid('role_id').notNull(),
-    permissionKey: text('permission_key').notNull().references(() => permissions.key),
+    permissionKey: text('permission_key')
+      .notNull()
+      .references(() => permissions.key),
     scope: permissionScope('scope').notNull().default('all'),
   },
   (t) => [
     primaryKey({ columns: [t.roleId, t.permissionKey] }),
-    foreignKey({ columns: [t.workspaceId, t.roleId], foreignColumns: [roles.workspaceId, roles.id] }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.workspaceId, t.roleId],
+      foreignColumns: [roles.workspaceId, roles.id],
+    }).onDelete('cascade'),
   ],
 );
 
@@ -80,8 +90,14 @@ export const memberRoles = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.memberId, t.roleId] }),
-    foreignKey({ columns: [t.workspaceId, t.memberId], foreignColumns: [workspaceMembers.workspaceId, workspaceMembers.id] }).onDelete('cascade'),
-    foreignKey({ columns: [t.workspaceId, t.roleId], foreignColumns: [roles.workspaceId, roles.id] }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.workspaceId, t.memberId],
+      foreignColumns: [workspaceMembers.workspaceId, workspaceMembers.id],
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.workspaceId, t.roleId],
+      foreignColumns: [roles.workspaceId, roles.id],
+    }).onDelete('cascade'),
   ],
 );
 
@@ -90,12 +106,17 @@ export const memberPermissionOverrides = pgTable(
   {
     workspaceId: workspaceId(),
     memberId: uuid('member_id').notNull(),
-    permissionKey: text('permission_key').notNull().references(() => permissions.key),
+    permissionKey: text('permission_key')
+      .notNull()
+      .references(() => permissions.key),
     effect: overrideEffect('effect').notNull(),
     scope: permissionScope('scope').notNull().default('all'),
   },
   (t) => [
     primaryKey({ columns: [t.memberId, t.permissionKey] }),
-    foreignKey({ columns: [t.workspaceId, t.memberId], foreignColumns: [workspaceMembers.workspaceId, workspaceMembers.id] }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.workspaceId, t.memberId],
+      foreignColumns: [workspaceMembers.workspaceId, workspaceMembers.id],
+    }).onDelete('cascade'),
   ],
 );

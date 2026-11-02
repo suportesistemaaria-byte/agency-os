@@ -8,8 +8,13 @@ const iso = (d: Date | null): string | null =>
   d ? new Date(d.getTime() - 3 * 3600_000).toISOString().slice(0, 16).replace('T', ' ') : null;
 
 const CAL = defaultCalendar(['2026-11-02', '2026-11-20', '2026-12-25']);
-const run = (policy: SlaPolicy, created: string, now = created, pauses: PauseInterval[] = [], cal: BusinessCalendar = CAL) =>
-  calculateDueAt({ calendar: cal, policy, createdAt: sp(created), now: sp(now), pausedIntervals: pauses });
+const run = (
+  policy: SlaPolicy,
+  created: string,
+  now = created,
+  pauses: PauseInterval[] = [],
+  cal: BusinessCalendar = CAL,
+) => calculateDueAt({ calendar: cal, policy, createdAt: sp(created), now: sp(now), pausedIntervals: pauses });
 
 describe('dias úteis · regra A1 (mesmo horário)', () => {
   it('dentro do expediente: ter 11:20 + 1 DU = qua 11:20 (exemplo aprovado)', () => {
@@ -74,9 +79,17 @@ describe('dias úteis · regra A1 (mesmo horário)', () => {
   it('A1 cai em lacuna do dia de destino → vence no fim do período anterior (13:00)', () => {
     const cal: BusinessCalendar = {
       ...CAL,
-      periods: { ...CAL.periods, 3: [{ start: hm(10), end: hm(13) }, { start: hm(15), end: hm(19) }] },
+      periods: {
+        ...CAL.periods,
+        3: [
+          { start: hm(10), end: hm(13) },
+          { start: hm(15), end: hm(19) },
+        ],
+      },
     };
-    expect(iso(run(P.alteracao, '2026-11-10T14:30', '2026-11-10T14:30', [], cal).dueAt)).toBe('2026-11-11 13:00');
+    expect(iso(run(P.alteracao, '2026-11-10T14:30', '2026-11-10T14:30', [], cal).dueAt)).toBe(
+      '2026-11-11 13:00',
+    );
   });
 });
 
@@ -95,17 +108,23 @@ describe('horas úteis', () => {
   });
   it('4 HU terminando exatamente às 13:00 vence às 13:00 (não às 14:00)', () => {
     expect(iso(run(P.alteracao_urgente, '2026-11-10T09:00').dueAt)).toBe('2026-11-10 15:00');
-    expect(iso(run({ model: 'business_hours', amount: 3 }, '2026-11-10T10:00').dueAt)).toBe('2026-11-10 13:00');
+    expect(iso(run({ model: 'business_hours', amount: 3 }, '2026-11-10T10:00').dueAt)).toBe(
+      '2026-11-10 13:00',
+    );
   });
 });
 
 describe('pausa, retomada e bloqueio', () => {
   const pause = (s: string, e?: string, kind: 'client' | 'blocked' = 'client'): PauseInterval => ({
-    start: sp(s), end: e ? sp(e) : undefined, kind,
+    start: sp(s),
+    end: e ? sp(e) : undefined,
+    kind,
   });
 
   it('exemplo V3: ter 11:20, pausa ter 15:00 → qua 10:30 ⇒ restam 5h20 ⇒ qua 16:50', () => {
-    const r = run(P.arte_estatica, '2026-11-10T11:20', '2026-11-11T10:30', [pause('2026-11-10T15:00', '2026-11-11T10:30')]);
+    const r = run(P.arte_estatica, '2026-11-10T11:20', '2026-11-11T10:30', [
+      pause('2026-11-10T15:00', '2026-11-11T10:30'),
+    ]);
     expect(iso(r.dueAt)).toBe('2026-11-11 16:50');
     expect(r.remainingBusinessMinutes).toBe(320);
     expect(r.consumedBusinessMinutes).toBe(160);
@@ -117,18 +136,24 @@ describe('pausa, retomada e bloqueio', () => {
     expect(r.remainingBusinessMinutes).toBe(320);
   });
   it('bloqueio em aberto: status BLOCKED', () => {
-    const r = run(P.arte_estatica, '2026-11-10T11:20', '2026-11-11T12:00', [pause('2026-11-10T15:00', undefined, 'blocked')]);
+    const r = run(P.arte_estatica, '2026-11-10T11:20', '2026-11-11T12:00', [
+      pause('2026-11-10T15:00', undefined, 'blocked'),
+    ]);
     expect(r.status).toBe('BLOCKED');
     expect(r.dueAt).toBeNull();
   });
   it('retomada: depois do bloqueio, o saldo volta a correr', () => {
-    const r = run(P.arte_estatica, '2026-11-10T11:20', '2026-11-11T15:00', [pause('2026-11-10T15:00', '2026-11-11T10:30', 'blocked')]);
+    const r = run(P.arte_estatica, '2026-11-10T11:20', '2026-11-11T15:00', [
+      pause('2026-11-10T15:00', '2026-11-11T10:30', 'blocked'),
+    ]);
     expect(iso(r.dueAt)).toBe('2026-11-11 16:50');
     expect(r.remainingBusinessMinutes).toBe(110);
     expect(r.status).toBe('NEAR_DUE');
   });
   it('pausa totalmente fora do expediente não muda o vencimento', () => {
-    const r = run(P.arte_estatica, '2026-11-13T18:30', '2026-11-16T10:00', [pause('2026-11-13T20:00', '2026-11-16T10:00')]);
+    const r = run(P.arte_estatica, '2026-11-13T18:30', '2026-11-16T10:00', [
+      pause('2026-11-13T20:00', '2026-11-16T10:00'),
+    ]);
     expect(iso(r.dueAt)).toBe('2026-11-16 18:30');
   });
   it('duas pausas somam corretamente', () => {
@@ -190,10 +215,20 @@ describe('validação', () => {
     expect(() => run({ model: 'business_days', amount: 1.5 }, '2026-11-10T11:00')).toThrow();
   });
   it('calendário sem períodos', () => {
-    expect(() => run(P.arte_estatica, '2026-11-10T11:00', undefined, [], { timezone: 'America/Sao_Paulo', periods: {}, holidays: [] })).toThrow();
+    expect(() =>
+      run(P.arte_estatica, '2026-11-10T11:00', undefined, [], {
+        timezone: 'America/Sao_Paulo',
+        periods: {},
+        holidays: [],
+      }),
+    ).toThrow();
   });
   it('período mal formado', () => {
-    const cal: BusinessCalendar = { timezone: 'America/Sao_Paulo', periods: { 1: [{ start: 800, end: 700 }] }, holidays: [] };
+    const cal: BusinessCalendar = {
+      timezone: 'America/Sao_Paulo',
+      periods: { 1: [{ start: 800, end: 700 }] },
+      holidays: [],
+    };
     expect(() => run(P.arte_estatica, '2026-11-10T11:00', undefined, [], cal)).toThrow();
   });
 });

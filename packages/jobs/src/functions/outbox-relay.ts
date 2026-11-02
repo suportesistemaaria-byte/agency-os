@@ -20,8 +20,18 @@ export const outboxRelay = inngest.createFunction(
         await step.sendEvent(`send-${e.id}`, {
           id: e.id,
           name: inngestName(e.type),
-          data: { eventId: e.id, workspaceId: e.workspace_id, type: e.type, version: e.version, entityType: e.entity_type,
-            entityId: e.entity_id, actorType: e.actor_type, actorId: e.actor_id, payload: e.payload, occurredAt: e.occurred_at },
+          data: {
+            eventId: e.id,
+            workspaceId: e.workspace_id,
+            type: e.type,
+            version: e.version,
+            entityType: e.entity_type,
+            entityId: e.entity_id,
+            actorType: e.actor_type,
+            actorId: e.actor_id,
+            payload: e.payload,
+            occurredAt: e.occurred_at,
+          },
         });
         delivered.push(e.id);
       } catch (err) {
@@ -34,8 +44,12 @@ export const outboxRelay = inngest.createFunction(
 );
 
 /** Alerta se o outbox parar (monitoramento). */
-export const outboxWatchdog = inngest.createFunction({ id: 'outbox-watchdog' }, { cron: '*/10 * * * *' }, async () => {
-  const n = await stuckCount(adminDb());
-  if (n > 0) logger.error({ stuck: n }, 'outbox.stuck');
-  return { stuck: n };
-});
+export const outboxWatchdog = inngest.createFunction(
+  { id: 'outbox-watchdog' },
+  { cron: '*/10 * * * *' },
+  async () => {
+    const n = await stuckCount(adminDb());
+    if (n > 0) logger.error({ stuck: n }, 'outbox.stuck');
+    return { stuck: n };
+  },
+);

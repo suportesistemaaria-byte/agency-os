@@ -15,7 +15,11 @@ export interface EmitInput<T extends EventType> {
  * Grava o evento no outbox DENTRO da transação recebida.
  * Se a transação falhar, o evento não existe; se commitar, o relay garante a entrega.
  */
-export async function emit<T extends EventType>(tx: Tx, ctx: TenantContext, e: EmitInput<T>): Promise<string> {
+export async function emit<T extends EventType>(
+  tx: Tx,
+  ctx: TenantContext,
+  e: EmitInput<T>,
+): Promise<string> {
   if (!EVENT_NAME.test(e.type)) throw new Error(`Nome de evento inválido: ${e.type}`);
   const payload = parsePayload(e.type, e.payload) as Record<string, unknown>;
   const [row] = await tx
@@ -35,7 +39,8 @@ export async function emit<T extends EventType>(tx: Tx, ctx: TenantContext, e: E
   return row?.id ?? 'duplicate';
 }
 
-export interface ClaimedEvent {
+// type (não interface): precisa satisfazer Record<string, unknown> exigido por db.execute<T>.
+export type ClaimedEvent = {
   id: string;
   workspace_id: string;
   type: string;
@@ -47,7 +52,7 @@ export interface ClaimedEvent {
   payload: Record<string, unknown>;
   occurred_at: string;
   attempts: number;
-}
+};
 
 /** Backoff exponencial com teto de 1 hora. */
 export const backoffSeconds = (attempts: number): number => Math.min(3600, 2 ** Math.min(attempts, 12) * 5);
@@ -72,7 +77,14 @@ export async function claimBatch(admin: Db, limit = 100): Promise<ClaimedEvent[]
 
 export async function markProcessed(admin: Db, ids: string[]): Promise<void> {
   if (ids.length === 0) return;
-  await admin.execute(sql`update domain_events set processed_at = now(), last_error = null where id = any(${ids}::uuid[])`);
+  // O Drizzle expande arrays JS em lista ($1, $2, …); por isso sql.join em vez de any($1::uuid[]).
+  const list = sql.join(
+    ids.map((i) => sql`${i}::uuid`),
+    sql`, `,
+  );
+  await admin.execute(
+    sql`update domain_events set processed_at = now(), last_error = null where id in (${list})`,
+  );
 }
 
 export async function markFailed(admin: Db, id: string, attempts: number, error: string): Promise<void> {

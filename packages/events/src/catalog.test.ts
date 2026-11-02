@@ -7,7 +7,9 @@ describe('catálogo de eventos', () => {
     for (const t of [...Object.keys(EVENT_CATALOG), ...PLANNED_EVENTS]) expect(EVENT_NAME.test(t)).toBe(true);
   });
   it('valida payload', () => {
-    expect(parsePayload('holiday.created', { date: '2026-11-20', name: 'Consciência Negra' }).name).toBe('Consciência Negra');
+    expect(parsePayload('holiday.created', { date: '2026-11-20', name: 'Consciência Negra' }).name).toBe(
+      'Consciência Negra',
+    );
     expect(() => parsePayload('holiday.created', { date: 1 })).toThrow();
   });
   it('prefixo no Inngest', () => {

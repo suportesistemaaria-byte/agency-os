@@ -13,10 +13,29 @@ export const EVENT_CATALOG = {
 
 /** Eventos já previstos na V3 que serão adicionados nas próximas sprints (referência). */
 export const PLANNED_EVENTS = [
-  'lead.created', 'opportunity.created', 'opportunity.stage_changed', 'proposal.sent', 'opportunity.won', 'opportunity.converted',
-  'client.created', 'onboarding.started', 'contract.confirmed', 'contract.expiring', 'request.created', 'task.assigned',
-  'task.blocked', 'task.overdue', 'sla.near_due', 'sla.overdue', 'content.created', 'content.submitted',
-  'content.change_requested', 'content.approved', 'invoice.created', 'invoice.paid', 'invoice.overdue',
+  'lead.created',
+  'opportunity.created',
+  'opportunity.stage_changed',
+  'proposal.sent',
+  'opportunity.won',
+  'opportunity.converted',
+  'client.created',
+  'onboarding.started',
+  'contract.confirmed',
+  'contract.expiring',
+  'request.created',
+  'task.assigned',
+  'task.blocked',
+  'task.overdue',
+  'sla.near_due',
+  'sla.overdue',
+  'content.created',
+  'content.submitted',
+  'content.change_requested',
+  'content.approved',
+  'invoice.created',
+  'invoice.paid',
+  'invoice.overdue',
 ] as const;
 
 export type EventType = keyof typeof EVENT_CATALOG;

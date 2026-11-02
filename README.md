@@ -3,7 +3,7 @@
 Sistema operacional da Agência 4P: Comercial → Clientes → Operação → Conteúdo → Aprovações → Financeiro → Performance.
 A **arquitetura técnica V3** (`docs/ARCHITECTURE.md`) é a fonte de verdade. Decisões em `docs/DECISIONS.md`.
 
-Status: **Sprint 0 (fundação) — validação final pendente.** Veja `HANDOFF-SPRINT-0.md`. Ainda não há telas de negócio.
+Status: **Sprint 0 (fundação) concluído e validado** (`docs/validation/SPRINT-0-FINAL-VALIDATION.md`). Ainda não há telas de negócio.
 
 ## Requisitos
 
@@ -29,25 +29,26 @@ As variáveis são carregadas pelo seu shell/gerenciador (ex.: `direnv`, `dotenv
 
 ## Comandos
 
-| Comando | O que faz |
-|---|---|
-| `pnpm dev` | Next.js em modo desenvolvimento |
-| `pnpm dev:jobs` | Inngest Dev Server apontando para `/api/inngest` |
-| `pnpm lint` / `pnpm format` | ESLint / Prettier |
-| `pnpm typecheck` | `tsc --noEmit` em todos os pacotes |
-| `pnpm test` | testes unitários (inclui os 38 casos de SLA) |
-| `pnpm test:integration` | RLS, isolamento, outbox e auditoria em Postgres real |
-| `pnpm build` | build de produção |
-| `pnpm verify` | tudo acima, na ordem do CI |
-| `pnpm db:generate` | gera migração a partir do schema Drizzle |
-| `pnpm db:reset` | zera o banco local e recria (bloqueado em staging/produção) |
-| `pnpm db:studio` | Drizzle Studio |
+| Comando                     | O que faz                                                   |
+| --------------------------- | ----------------------------------------------------------- |
+| `pnpm dev`                  | Next.js em modo desenvolvimento                             |
+| `pnpm dev:jobs`             | Inngest Dev Server apontando para `/api/inngest`            |
+| `pnpm lint` / `pnpm format` | ESLint / Prettier                                           |
+| `pnpm typecheck`            | `tsc --noEmit` em todos os pacotes                          |
+| `pnpm test`                 | testes unitários (inclui os 38 casos de SLA)                |
+| `pnpm test:integration`     | RLS, isolamento, outbox e auditoria em Postgres real        |
+| `pnpm build`                | build de produção                                           |
+| `pnpm verify`               | tudo acima, na ordem do CI                                  |
+| `pnpm db:generate`          | gera migração a partir do schema Drizzle                    |
+| `pnpm db:reset`             | zera o banco local e recria (bloqueado em staging/produção) |
+| `pnpm db:studio`            | Drizzle Studio                                              |
 
 ## Como validar o caminho de eventos localmente
 
 ```bash
 curl -X POST http://localhost:3000/api/debug/emit   # só funciona com APP_ENV=local
 ```
+
 No painel do Inngest (localhost:8288) aparecem: `aos/outbox.flush` → `outbox-relay` → `aos/system.healthcheck` → `event-probe`.
 A página inicial mostra "Eventos pendentes no outbox" voltando a 0.
 

@@ -48,5 +48,8 @@ export const slaPolicies = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [unique('sla_policies_ws_key').on(t.workspaceId, t.key), unique('sla_policies_ws_id').on(t.workspaceId, t.id)],
+  (t) => [
+    unique('sla_policies_ws_key').on(t.workspaceId, t.key),
+    unique('sla_policies_ws_id').on(t.workspaceId, t.id),
+  ],
 );

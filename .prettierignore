@@ -2,3 +2,6 @@ pnpm-lock.yaml
 **/migrations/**
 .next
 dist
+docs/reference
+*.log
+.turbo

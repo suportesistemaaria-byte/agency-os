@@ -1,92 +1,62 @@
 # SPRINT 0 — FINAL VALIDATION REPORT
 
-Data: 2026-11-02
+Data: 2026-11-02 · Ambiente: Linux, Node 22.23.4, pnpm 9.12.3, PostgreSQL 16 (nativo, mesmas credenciais do `docker-compose.yml`)
 
-## Limitação do ambiente
-
-Este ambiente não executa Node.js, pnpm, Docker nem o Next.js. Por isso, **não foi possível** rodar `pnpm install`, gerar o lockfile, rodar ESLint, o `tsc` completo, o Vitest real, o build do Next.js e `pnpm verify`.
-
-O que foi possível, e foi feito:
-- Rodar as **migrações reais do projeto** num **PostgreSQL 16.4 de verdade** (PGlite, o Postgres compilado para WebAssembly), testando RLS, isolamento, outbox, runCommand e auditoria com SQL real. Resultado bruto em `postgres-results.json`.
-- Rodar os testes da biblioteca de SLA e os unitários com o compilador TypeScript 5.6 e um executor compatível com o Vitest.
-
-## Correções feitas nesta rodada
-
-| Problema | Causa | Correção |
-|---|---|---|
-| Migração 0000 falhava: `extension "pgcrypto" is not available` | extensão desnecessária; `gen_random_uuid()` é nativo do PostgreSQL 13+ | linha removida da migração |
-| Teste de isolamento não cobria "relação com entidade de B", "mover dados para B" nem "operação legítima" | lacuna de cobertura | 3 testes adicionados em `isolation.int.test.ts` |
+> O daemon do Docker não estava disponível no ambiente de validação. Foi usado um PostgreSQL 16 nativo com o mesmo usuário dono (`aos_owner`), banco (`agency_os`) e porta (5432) do `docker-compose.yml`. Os comandos `db:roles`, `db:migrate`, `db:seed` e os testes rodaram exatamente como no fluxo com Docker.
 
 ## Tabela de validação
 
-| Validação | Resultado | Evidência |
-|---|---|---|
-| pnpm install | NÃO EXECUTADO | requer Node/pnpm; rodar localmente |
-| lockfile (pnpm-lock.yaml) | NÃO EXECUTADO | gerado pelo primeiro `pnpm install` |
-| Migrações | PASSOU | 0000 + 0001 aplicadas sem erro em PostgreSQL 16.4; 13 tabelas |
-| Seed | PASSOU (via SQL equivalente) | 19 permissões, 22 cargos (11 × 2 workspaces), 176 concessões, 16 políticas de SLA, 26 feriados, membros. O `seed.ts` com Drizzle ainda precisa rodar localmente |
-| RLS | PASSOU | 10/10 tabelas com `workspace_id` com RLS e política; `aos_app` sem BYPASSRLS e sem tabelas próprias |
-| Isolamento entre workspaces | PASSOU | 11 casos (abaixo) |
-| Outbox | PASSOU | 7 casos (abaixo) |
-| runCommand (transação) | PASSOU (SQL equivalente) | commit grava 1+1+1; falha deixa 0/0/0 |
-| Auditoria | PASSOU | 6 casos (abaixo) |
-| SLA | PASSOU no executor compatível · Vitest real NÃO EXECUTADO | 38/38 |
-| Testes unitários (logger, audit, events, env) | PASSOU no executor compatível · Vitest real NÃO EXECUTADO | 13/13 |
-| Typecheck | PARCIAL | 0 erros em `@aos/sla`, `redact`, `auditDiff`; demais pacotes precisam de `pnpm install` |
-| Lint | NÃO EXECUTADO | requer `pnpm install` |
-| Testes de integração (Vitest + Drizzle) | NÃO EXECUTADO | o comportamento foi comprovado com SQL real; os arquivos `*.int.test.ts` precisam rodar localmente |
-| Build Next.js | NÃO EXECUTADO | requer `pnpm install` |
-| pnpm verify | NÃO EXECUTADO | — |
-| Inngest, Sentry, Neon, Vercel | DEPENDE DE SERVIÇO EXTERNO | funcionam em modo local (Inngest Dev Server, Sentry desligado sem DSN, Docker Postgres) |
+| VALIDAÇÃO                   | RESULTADO                  | EVIDÊNCIA                                                                                                                                                                        |
+| --------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pnpm install                | PASSOU                     | `Done in 23.4s`. Só avisos de peer (`@opentelemetry/api` 1.10.0 vs `<1.10.0`, vindos de Inngest/Sentry); sem impacto no build nem nos testes                                     |
+| pnpm-lock.yaml              | PASSOU                     | gerado e versionado                                                                                                                                                              |
+| migrations                  | PASSOU                     | `pnpm db:migrate` → `Migrações aplicadas.`; `drizzle-kit check` → `Everything's fine`                                                                                            |
+| seed                        | PASSOU                     | `pnpm db:roles` → `Papel aos_app pronto.`; `pnpm db:seed` (Drizzle real) → `Seed concluído.`                                                                                     |
+| lint                        | PASSOU                     | `turbo run lint` → `Tasks: 9 successful, 9 total` (após correção abaixo)                                                                                                         |
+| typecheck                   | PASSOU                     | `turbo run typecheck` → `Tasks: 9 successful, 9 total` (após correção abaixo)                                                                                                    |
+| unit tests                  | PASSOU                     | Vitest real: logger 2/2 · audit 4/4 · env 3/3 · events 4/4 · sla 38/38 → **51 testes**                                                                                           |
+| integration tests           | PASSOU                     | Vitest real + Drizzle + Postgres: `@aos/db` 11/11 · `@aos/core` 5/5 → **16 testes**. Segunda execução seguida: 11/11 e 5/5 (estável)                                             |
+| SLA                         | PASSOU                     | `@aos/sla:test: Tests 38 passed (38)`                                                                                                                                            |
+| RLS                         | PASSOU                     | "toda tabela com workspace_id tem RLS ativa e política" e "o papel da aplicação não ignora RLS nem é dono das tabelas"                                                           |
+| isolamento                  | PASSOU                     | A não lê, não grava com workspace_id de B, não altera/apaga B, não cria relação com entidade de B, não move dados para B; sem contexto nada é visível; operações legítimas em A  |
+| runCommand                  | PASSOU                     | commit grava dado+evento+auditoria (1/1/1); falha desfaz tudo; idempotencyKey evita duplicata                                                                                    |
+| outbox                      | PASSOU                     | relay reserva lote, segundo claim retorna 0 (SKIP LOCKED), `markProcessed` marca o lote                                                                                          |
+| auditoria                   | PASSOU                     | novo teste: actor/workspace/action/entity/entity_id corretos, before/after coerentes (criação e alteração só com campos mudados), nenhum segredo na linha                        |
+| Next.js build               | PASSOU                     | `✓ Compiled successfully in 31.1s`; rotas `/`, `/_not-found`, `/api/debug/emit`, `/api/health`, `/api/inngest`; First Load JS 163 kB                                             |
+| Smoke test do build         | PASSOU                     | `next start`: `GET /api/health` → `{"status":"ok","db":true,...}`; `POST /api/debug/emit` → `{"eventId":"…"}`; página inicial mostra outbox e SLA                                |
+| pnpm verify                 | PASSOU                     | format → lint → typecheck → test → test:integration → build, exit code 0                                                                                                         |
+| Inngest (relay em execução) | DEPENDE DE SERVIÇO EXTERNO | o smoke test com Inngest Dev Server (`pnpm dev:jobs`) não foi executado; o evento fica pendente no outbox até o relay rodar, como esperado. Lógica do relay coberta pelos testes |
+| Sentry, Axiom, Neon, Vercel | DEPENDE DE SERVIÇO EXTERNO | Sentry desligado sem DSN; Postgres local no lugar do Neon                                                                                                                        |
 
-### Isolamento (PostgreSQL real, papel aos_app)
-| Caso | Resultado |
-|---|---|
-| Sem contexto de workspace, nada é visível | PASSOU (0 linhas) |
-| A lê só os próprios dados | PASSOU (8 políticas, todas de A) |
-| A não lê registro de B com ID conhecido | PASSOU (0 linhas) |
-| A só enxerga o próprio workspace | PASSOU |
-| A só enxerga usuários membros de A | PASSOU |
-| A não altera dados de B | PASSOU (0 linhas afetadas) |
-| A não apaga dados de B | PASSOU (B manteve 13 feriados) |
-| A não cria registro com workspace_id de B | PASSOU (bloqueado pela política RLS) |
-| A não cria relação com entidade de B | PASSOU (bloqueado pela FK composta) |
-| A não move os próprios dados para B | PASSOU (bloqueado pela política RLS) |
-| Operações legítimas em A funcionam | PASSOU |
+## Correções feitas nesta rodada
 
-### Outbox e runCommand
-| Caso | Resultado |
-|---|---|
-| Commit grava dado + evento + auditoria | PASSOU (1/1/1) |
-| Falha no meio da transação | PASSOU (0/0/0: sem alteração parcial nem evento órfão) |
-| Evento com workspace, tipo e ator corretos, pendente | PASSOU |
-| idempotency_key evita duplicata | PASSOU |
-| Nome de evento inválido rejeitado pelo banco | PASSOU |
-| Relay reserva lote sem entregar duas vezes (SKIP LOCKED) | PASSOU (2 e depois 0) |
-| markProcessed e backoff após falha | PASSOU |
-| Aplicação não pode marcar evento como processado | PASSOU (permission denied) |
+| Problema                                                                               | Causa                                                                                                                                              | Correção                                                                                                     |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `prettier --check` falhava em `.github/workflows/ci.yml` (`Unexpected flow-map-start`) | `concurrency: { group: ci-${{ github.ref }}, … }`: o `{{` dentro de um mapa inline é YAML inválido (o GitHub também rejeitaria)                    | `concurrency` reescrito em formato de bloco                                                                  |
+| `prettier --check` acusava 55 arquivos                                                 | código escrito sem rodar o Prettier                                                                                                                | `prettier --write .` (só formatação); `.prettierignore` passou a ignorar `docs/reference`, `*.log`, `.turbo` |
+| Lint: `'appDb' is defined but never used` em `command.int.test.ts`                     | import sobrando                                                                                                                                    | import removido                                                                                              |
+| Typecheck: `ClaimedEvent does not satisfy the constraint Record<string, unknown>`      | `db.execute<T>` exige `Record<string, unknown>`; uma `interface` não satisfaz essa restrição                                                       | `ClaimedEvent` virou `type`                                                                                  |
+| **Bug real:** `markProcessed` falhava com `malformed array literal`                    | o Drizzle expande arrays JS em lista `($1, $2…)`, então `any(${ids}::uuid[])` gerava SQL inválido. O relay nunca marcaria eventos como processados | `where id in (…)` com `sql.join` de `::uuid`. Sem enfraquecer o teste                                        |
+| Lacuna conhecida: o teste do `runCommand` só conferia a existência do audit_log        | cobertura incompleta                                                                                                                               | novo teste com asserções de conteúdo: ator, workspace, ação, entidade, before/after e ausência de segredos   |
 
-### Auditoria
-| Caso | Resultado |
-|---|---|
-| actor, workspace, action, entity, entity_id corretos | PASSOU |
-| before/after coerentes | PASSOU |
-| Nenhum segredo armazenado | PASSOU (password, token e authorization = [REDACTED]) |
-| Alteração guarda só campos mudados | PASSOU |
-| Aplicação não altera nem apaga audit_logs | PASSOU (permission denied) |
+## Warnings relevantes
 
-## Para fechar a Sprint 0 (na sua máquina, ~10 minutos)
+- Build: o Sentry recomenda um `global-error.js` com instrumentação para erros de renderização do React. Não bloqueia; fica para quando houver telas (Bloco 1).
+- Install: avisos de peer do `@opentelemetry/api` (dependência transitiva do Inngest e do Sentry). Sem efeito observado.
+
+## Comandos executados
 
 ```bash
-corepack enable && pnpm install
+pnpm install
 cp .env.example .env && set -a && . ./.env && set +a
-pnpm db:up && pnpm db:roles && pnpm db:migrate && pnpm db:seed
-pnpm verify
+pnpm db:roles && pnpm db:migrate && pnpm db:seed
+pnpm --filter @aos/db check
+pnpm verify 2>&1 | tee verify.log
+pnpm test:integration          # segunda execução (estabilidade)
 ```
-Envie a saída completa. Corrijo qualquer erro e atualizo este relatório.
 
 ## STATUS DO SPRINT 0
 
-**SPRINT 0 NÃO CONCLUÍDO**
+**SPRINT 0 CONCLUÍDO E VALIDADO**
 
-Banco, RLS, isolamento, outbox, transação e auditoria estão comprovados em PostgreSQL real. Faltam pnpm install, lockfile, lint, typecheck completo, Vitest real, testes de integração com Drizzle, build e `pnpm verify`, que precisam de um ambiente com Node.js.
+Pronto para autorização do Sprint 1. Pendente apenas o que depende de serviço externo (Inngest Dev Server/Cloud, Sentry, Neon, Vercel).

@@ -1,40 +1,20 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": [
-    "APP_ENV",
-    "NODE_ENV"
-  ],
+  "globalEnv": ["APP_ENV", "NODE_ENV"],
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "dist/**"
-      ],
-      "env": [
-        "DATABASE_URL",
-        "SENTRY_*",
-        "NEXT_PUBLIC_*",
-        "INNGEST_*"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": ["DATABASE_URL", "SENTRY_*", "NEXT_PUBLIC_*", "INNGEST_*"]
     },
     "lint": {},
     "typecheck": {
-      "dependsOn": [
-        "^typecheck"
-      ]
+      "dependsOn": ["^typecheck"]
     },
     "test": {},
     "test:integration": {
       "cache": false,
-      "env": [
-        "DATABASE_URL",
-        "DATABASE_ADMIN_URL",
-        "APP_DB_PASSWORD"
-      ]
+      "env": ["DATABASE_URL", "DATABASE_ADMIN_URL", "APP_DB_PASSWORD"]
     },
     "dev": {
       "cache": false,

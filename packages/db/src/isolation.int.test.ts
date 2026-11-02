@@ -9,8 +9,18 @@ import { hasDb, seededWorkspaces } from './test-utils';
  * Base dos testes de isolamento (V3, seção 4). A cada nova tabela de negócio,
  * adicione-a em TENANT_TABLES: o teste "toda tabela tem RLS" falha se esquecer.
  */
-const TENANT_TABLES = ['workspace_members', 'roles', 'role_permissions', 'member_roles', 'member_permission_overrides',
-  'business_calendars', 'holidays', 'sla_policies', 'domain_events', 'audit_logs'];
+const TENANT_TABLES = [
+  'workspace_members',
+  'roles',
+  'role_permissions',
+  'member_roles',
+  'member_permission_overrides',
+  'business_calendars',
+  'holidays',
+  'sla_policies',
+  'domain_events',
+  'audit_logs',
+];
 
 describe.skipIf(!hasDb())('isolamento por workspace (RLS)', () => {
   let A = '';
@@ -82,13 +92,19 @@ describe.skipIf(!hasDb())('isolamento por workspace (RLS)', () => {
 
   it('workspace A não move os próprios dados para B', async () => {
     await expect(
-      withTenant(appDb(), { workspaceId: A }, (tx) => tx.execute(sql`update sla_policies set workspace_id = ${B} where workspace_id = ${A}`)),
+      withTenant(appDb(), { workspaceId: A }, (tx) =>
+        tx.execute(sql`update sla_policies set workspace_id = ${B} where workspace_id = ${A}`),
+      ),
     ).rejects.toThrow();
   });
 
   it('operações legítimas dentro do próprio workspace funcionam', async () => {
     const rows = await withTenant(appDb(), { workspaceId: A }, (tx) =>
-      tx.insert(holidays).values({ workspaceId: A, date: '2039-03-19', name: 'Legítimo', kind: 'municipal' }).onConflictDoNothing().returning(),
+      tx
+        .insert(holidays)
+        .values({ workspaceId: A, date: '2039-03-19', name: 'Legítimo', kind: 'municipal' })
+        .onConflictDoNothing()
+        .returning(),
     );
     expect(rows.length).toBeLessThanOrEqual(1);
   });
@@ -101,11 +117,15 @@ describe.skipIf(!hasDb())('isolamento por workspace (RLS)', () => {
       withTenant(appDb(), { workspaceId: A }, (tx) => tx.execute(sql`delete from audit_logs`)),
     ).rejects.toThrow();
     await withTenant(appDb(), { workspaceId: A }, (tx) =>
-      tx.insert(auditLogs).values({ workspaceId: A, actorType: 'system', action: 'test.ok', entityType: 'test' }),
+      tx
+        .insert(auditLogs)
+        .values({ workspaceId: A, actorType: 'system', action: 'test.ok', entityType: 'test' }),
     );
   });
 
   it('workspaceId inválido é rejeitado antes de chegar ao banco', async () => {
-    await expect(withTenant(appDb(), { workspaceId: "x' or 1=1" }, async () => 1)).rejects.toThrow('workspaceId inválido');
+    await expect(withTenant(appDb(), { workspaceId: "x' or 1=1" }, async () => 1)).rejects.toThrow(
+      'workspaceId inválido',
+    );
   });
 });

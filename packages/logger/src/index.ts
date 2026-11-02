@@ -14,7 +14,15 @@ export const logger = pino({
   level: process.env.LOG_LEVEL ?? 'info',
   base: { service: 'agency-os', env: process.env.APP_ENV ?? 'local' },
   redact: {
-    paths: ['*.password', '*.token', '*.secret', '*.authorization', '*.cookie', 'req.headers.authorization', 'req.headers.cookie'],
+    paths: [
+      '*.password',
+      '*.token',
+      '*.secret',
+      '*.authorization',
+      '*.cookie',
+      'req.headers.authorization',
+      'req.headers.cookie',
+    ],
     censor: REDACTED,
   },
   formatters: { level: (label) => ({ level: label }) },
@@ -23,5 +31,8 @@ export const logger = pino({
 
 export type Logger = typeof logger;
 
-export const childLogger = (bindings: { workspaceId?: string; requestId?: string; module?: string }): Logger =>
-  logger.child(bindings);
+export const childLogger = (bindings: {
+  workspaceId?: string;
+  requestId?: string;
+  module?: string;
+}): Logger => logger.child(bindings);

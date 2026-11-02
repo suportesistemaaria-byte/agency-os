@@ -3,7 +3,16 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 const config: NextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@aos/core', '@aos/db', '@aos/env', '@aos/events', '@aos/jobs', '@aos/logger', '@aos/sla', '@aos/audit'],
+  transpilePackages: [
+    '@aos/core',
+    '@aos/db',
+    '@aos/env',
+    '@aos/events',
+    '@aos/jobs',
+    '@aos/logger',
+    '@aos/sla',
+    '@aos/audit',
+  ],
   serverExternalPackages: ['pg', 'pino'],
   poweredByHeader: false,
   async headers() {

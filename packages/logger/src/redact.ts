@@ -1,5 +1,6 @@
 /** Chaves que nunca podem aparecer em logs ou na auditoria. */
-export const SENSITIVE_KEY = /(pass(word)?|secret|token|api[-_]?key|authorization|cookie|credential|session|cpf|cnpj_raw|card)/i;
+export const SENSITIVE_KEY =
+  /(pass(word)?|secret|token|api[-_]?key|authorization|cookie|credential|session|cpf|cnpj_raw|card)/i;
 
 export const REDACTED = '[REDACTED]';
 
