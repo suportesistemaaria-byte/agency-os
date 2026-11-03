@@ -26,6 +26,7 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   AlertTriangle,
+  Flag,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -55,6 +56,7 @@ export const ICONS = {
   settings: Settings,
   bell: Bell,
   alert: AlertTriangle,
+  flag: Flag,
   login: LogIn,
   logout: LogOut,
 } satisfies Record<string, LucideIcon>;

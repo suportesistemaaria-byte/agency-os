@@ -70,6 +70,8 @@ const TENANT_TABLES = [
   'task_comments',
   'meetings',
   'meeting_participants',
+  'meeting_decisions',
+  'contract_amendments',
   'invoices',
   'invoice_items',
   'payments',

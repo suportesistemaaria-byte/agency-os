@@ -264,3 +264,24 @@ export const meetingParticipants = pgTable(
     wsFk('meeting_participants', t, t.memberId, workspaceMembers),
   ],
 );
+
+/** Decisão de reunião: vira tarefa com responsável (V3, meeting_decisions → task_id). */
+export const meetingDecisions = pgTable(
+  'meeting_decisions',
+  {
+    id: id(),
+    workspaceId: ws(),
+    meetingId: uuid('meeting_id').notNull(),
+    description: text('description').notNull(),
+    ownerId: uuid('owner_id'),
+    taskId: uuid('task_id'),
+    createdBy: uuid('created_by'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    wsUnique('meeting_decisions', t),
+    wsFk('meeting_decisions', t, t.meetingId, meetings),
+    wsFk('meeting_decisions', t, t.ownerId, workspaceMembers),
+    wsFk('meeting_decisions', t, t.taskId, tasks),
+  ],
+);

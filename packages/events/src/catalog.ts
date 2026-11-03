@@ -56,6 +56,9 @@ export const EVENT_CATALOG = {
   'task.completed': e({ taskId: id }),
   'task.commented': e({ taskId: id }),
   'meeting.created': e({ meetingId: id }),
+  'meeting.decision_created': e({ meetingId: id, decisionId: id, taskId: opt }),
+  'campaign.created': e({ campaignId: id, clientId: id }),
+  'client.health_changed': e({ clientId: id, from: z.number().nullable(), to: z.number().nullable() }),
   // SLA
   'sla.started': e({ clockId: id, entityType: z.string(), entityId: id, dueAt: z.string().nullable() }),
   'sla.paused': e({ clockId: id, kind: z.string() }),

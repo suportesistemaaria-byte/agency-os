@@ -489,6 +489,36 @@ export const appRouter = router({
       )
       .mutation(({ ctx, input }) => d.createMeeting(ctx.ctx, input)),
   }),
+  campaigns: router({
+    create: p
+      .input(
+        z.object({
+          clientId: id,
+          name: z.string().min(1),
+          objective: z.string().optional(),
+          startsOn: day.optional(),
+          endsOn: day.optional(),
+        }),
+      )
+      .mutation(({ ctx, input }) => d.createCampaign(ctx.ctx, input)),
+    assignContent: p
+      .input(z.object({ contentId: id, campaignId: id.nullable() }))
+      .mutation(({ ctx, input }) => d.setContentCampaign(ctx.ctx, input.contentId, input.campaignId)),
+  }),
+  meetingNotes: p
+    .input(z.object({ id, notes: z.string() }))
+    .mutation(({ ctx, input }) => d.updateMeetingNotes(ctx.ctx, input.id, input.notes)),
+  meetingDecision: p
+    .input(
+      z.object({
+        meetingId: id,
+        description: z.string().min(1),
+        ownerId: id,
+        slaPolicyKey: z.string().optional(),
+        dueAt: date.nullable().optional(),
+      }),
+    )
+    .mutation(({ ctx, input: { meetingId, ...rest } }) => d.addMeetingDecision(ctx.ctx, meetingId, rest)),
   notifications: router({
     list: p.query(({ ctx }) => d.listNotifications(ctx.ctx)),
     markRead: p

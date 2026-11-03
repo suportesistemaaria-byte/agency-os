@@ -47,6 +47,7 @@ export const NAV: NavGroup[] = [
   {
     label: 'Gestão',
     items: [
+      { href: '/campanhas', label: 'Campanhas', icon: 'flag', perm: 'conteudo.view' },
       { href: '/equipe', label: 'Equipe', icon: 'users', perm: 'members.manage' },
       { href: '/reunioes', label: 'Reuniões', icon: 'event' },
       { href: '/arquivos', label: 'Arquivos', icon: 'folder', perm: 'clientes.view' },
@@ -89,6 +90,7 @@ export const CRUMB: Record<string, string> = {
   tarefas: 'Tarefas',
   calendario: 'Calendário',
   equipe: 'Equipe',
+  campanhas: 'Campanhas',
   reunioes: 'Reuniões',
   arquivos: 'Arquivos',
   financeiro: 'Financeiro',

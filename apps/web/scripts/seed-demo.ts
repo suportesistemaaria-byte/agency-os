@@ -772,6 +772,39 @@ async function main() {
     });
   }
 
+  // ───────── Gestão: campanha, decisão de reunião ─────────
+  const bf = await d.createCampaign(ctx, {
+    clientId: C('Café Aurora'),
+    name: 'Black Friday',
+    objective: 'Conversão',
+    startsOn: iso(now).slice(0, 8) + '20',
+    endsOn: iso(now).slice(0, 8) + '30',
+  });
+  for (const t of ['Oferta Black Friday', 'Stories Black Friday'])
+    if (contentIds[t]) await d.setContentCampaign(ctx, contentIds[t]!, bf.id);
+  const past = await d.createMeeting(ctx, {
+    title: 'Planejamento mensal · Café Aurora',
+    startsAt: at(-3, 10),
+    endsAt: at(-3, 11),
+    clientId: C('Café Aurora'),
+    participantIds: [team.bia.memberId, team.nina.memberId],
+  });
+  await d.updateMeetingNotes(
+    ctx,
+    past.id,
+    'Cliente quer reforçar a Black Friday e testar tráfego pago. Aprovou o calendário de novembro.',
+  );
+  await d.addMeetingDecision(ctx, past.id, {
+    description: 'Enviar proposta de tráfego pago',
+    ownerId: team.leo.memberId,
+    slaPolicyKey: 'arte_estatica',
+  });
+  await d.addMeetingDecision(ctx, past.id, {
+    description: 'Criar sequência de stories da Black Friday',
+    ownerId: team.nina.memberId,
+    slaPolicyKey: 'video',
+  });
+
   // ───────── Despesas (6 meses) ─────────
   const cats = await db.select().from(s.expenseCategories).where(eq(s.expenseCategories.workspaceId, w4p.id));
   const cat = (n: string) => cats.find((c) => c.name === n)!.id;
@@ -801,6 +834,7 @@ async function main() {
   }
   await drain();
   log('despesas');
+  await d.snapshotHealth();
   log(`Pronto. Usuários: *@demo.local · senha de dev: ${DEMO_PASSWORD}`);
 }
 
