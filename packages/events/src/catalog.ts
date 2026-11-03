@@ -85,6 +85,10 @@ export const EVENT_CATALOG = {
   'payment.recorded': e({ invoiceId: id, paymentId: id, amountCents: z.number().int() }),
   'expense.created': e({ expenseId: id }),
   'payable.paid': e({ expenseId: id }),
+  // Performance
+  'metrics.imported': e({ clientId: id, rows: z.number().int(), source: z.string() }),
+  'learning.created': e({ learningId: id }),
+  'goal.set': e({ clientId: id, metric: z.string(), period: z.string() }),
 } as const;
 
 export type EventType = keyof typeof EVENT_CATALOG;

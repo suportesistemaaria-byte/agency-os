@@ -115,3 +115,17 @@ export const SLA_LABEL: Record<ClockStatus, string> = {
   met: 'Cumprido',
   missed: 'Entregue com atraso',
 };
+
+/** Métricas suportadas (rótulo, se entra no engajamento e se é estoque/saldo em vez de soma). */
+export const METRICS: Record<string, { label: string; engagement?: boolean; stock?: boolean }> = {
+  followers: { label: 'Seguidores', stock: true },
+  reach: { label: 'Alcance' },
+  impressions: { label: 'Impressões' },
+  likes: { label: 'Curtidas', engagement: true },
+  comments: { label: 'Comentários', engagement: true },
+  shares: { label: 'Compartilhamentos', engagement: true },
+  saves: { label: 'Salvamentos', engagement: true },
+  video_views: { label: 'Visualizações de vídeo' },
+  clicks: { label: 'Cliques' },
+  leads: { label: 'Leads' },
+};

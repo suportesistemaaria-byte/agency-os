@@ -558,6 +558,52 @@ export const appRouter = router({
       )
       .mutation(({ ctx, input }) => d.portalCreateRequest(ctx.portal, input)),
   }),
+  performance: router({
+    record: p
+      .input(
+        z.object({
+          clientId: id,
+          rows: z
+            .array(
+              z.object({
+                date: day,
+                metric: z.string(),
+                value: z.number().min(0),
+                contentId: id.nullable().optional(),
+                platform: z.string().nullable().optional(),
+              }),
+            )
+            .min(1),
+        }),
+      )
+      .mutation(({ ctx, input }) => d.recordMetrics(ctx.ctx, input.clientId, input.rows)),
+    importCsv: p
+      .input(z.object({ clientId: id, csv: z.string().min(1).max(2_000_000) }))
+      .mutation(({ ctx, input }) => d.importMetricsCsv(ctx.ctx, input.clientId, input.csv)),
+    setGoal: p
+      .input(
+        z.object({
+          clientId: id,
+          metric: z.string(),
+          period: z.string().regex(/^\d{4}-\d{2}$/),
+          target: z.number().positive(),
+        }),
+      )
+      .mutation(({ ctx, input }) => d.setGoal(ctx.ctx, input)),
+    addLearning: p
+      .input(
+        z.object({
+          clientId: id.nullable().optional(),
+          title: z.string().min(1),
+          evidence: z.string().optional(),
+          confidence: z.enum(['low', 'medium', 'high']).optional(),
+        }),
+      )
+      .mutation(({ ctx, input }) => d.addLearning(ctx.ctx, input)),
+    learningStatus: p
+      .input(z.object({ id, status: z.enum(['hypothesis', 'validated', 'discarded']) }))
+      .mutation(({ ctx, input }) => d.setLearningStatus(ctx.ctx, input.id, input.status)),
+  }),
   portalInvite: p
     .input(z.object({ contactId: id }))
     .mutation(({ ctx, input }) => d.createPortalInvite(ctx.ctx, input.contactId)),

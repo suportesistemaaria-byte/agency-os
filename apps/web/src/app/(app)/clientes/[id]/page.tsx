@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import {
+  performanceOverview,
   approvalCenter,
   clientHistory,
   getClient,
@@ -20,6 +21,7 @@ import { ContentKanban, FeedPreview, MonthCalendar } from '@/components/content-
 import { RequestStatusPill, SlaPill, StagePill } from '@/components/domain-ui';
 import { TaskRow } from '@/components/task-row';
 import { HealthBar } from '../health';
+import { PerformanceView } from '@/components/performance-view';
 import { ContactsEditor, TeamEditor, ClientQuickAdd, UploadFiles } from './client-actions';
 
 export const dynamic = 'force-dynamic';
@@ -375,11 +377,14 @@ export default async function ClientPage({
             </div>
           );
         })()}
-      {tab === 'performance' && (
-        <Empty title="Performance chega no Bloco 11">
-          Métricas manuais e por CSV, melhores conteúdos, metas e aprendizados.
-        </Empty>
-      )}
+      {tab === 'performance' &&
+        (has('reports.view') ? (
+          (async () => (
+            <PerformanceView o={await performanceOverview(ctx, { clientId: id })} showClient={false} />
+          ))()
+        ) : (
+          <Empty title="Sem acesso a relatórios">Peça ao Admin a permissão de relatórios.</Empty>
+        ))}
       {tab === 'financeiro' &&
         c.showFinance &&
         (async () => {

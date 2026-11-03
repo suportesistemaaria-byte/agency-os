@@ -79,6 +79,10 @@ const TENANT_TABLES = [
   'expenses',
   'automation_rules',
   'automation_executions',
+  'social_accounts',
+  'performance_metrics',
+  'performance_goals',
+  'learnings',
 ];
 
 describe.skipIf(!hasDb())('isolamento por workspace (RLS)', () => {

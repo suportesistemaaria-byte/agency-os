@@ -837,6 +837,67 @@ async function main() {
     slaPolicyKey: 'video',
   });
 
+  // ───────── Performance: 6 meses de métricas do perfil + métricas por conteúdo publicado ─────────
+  for (const [ci, name] of [
+    'Terra Mar',
+    'Café Aurora',
+    'Studio Nobre',
+    'Academia Ritmo',
+    'Clínica Vitta',
+  ].entries()) {
+    const rows: d.MetricInput[] = [];
+    for (let mo = 5; mo >= 0; mo--) {
+      const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - mo, 1));
+      const day =
+        mo === 0 ? iso(now) : iso(new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)));
+      const growth = 1 + (5 - mo) * 0.07 + ci * 0.03;
+      rows.push(
+        { date: day, metric: 'followers', value: Math.round((4200 + ci * 1300) * (1 + (5 - mo) * 0.025)) },
+        { date: day, metric: 'reach', value: Math.round((18000 + ci * 4000) * growth) },
+        { date: day, metric: 'impressions', value: Math.round((31000 + ci * 6000) * growth) },
+        { date: day, metric: 'likes', value: Math.round((900 + ci * 150) * growth) },
+        { date: day, metric: 'comments', value: Math.round((80 + ci * 10) * growth) },
+        { date: day, metric: 'shares', value: Math.round((60 + ci * 8) * growth) },
+        { date: day, metric: 'saves', value: Math.round((110 + ci * 12) * growth) },
+        { date: day, metric: 'clicks', value: Math.round((300 + ci * 40) * growth) },
+        { date: day, metric: 'leads', value: Math.round((14 + ci * 3) * growth) },
+      );
+    }
+    await d.recordMetrics(ctx, C(name), rows);
+    await d.setGoal(ctx, {
+      clientId: C(name),
+      metric: 'reach',
+      period: iso(now).slice(0, 7),
+      target: Math.round((18000 + ci * 4000) * 1.5),
+    });
+  }
+  const posted = await db.select().from(s.contents).where(eq(s.contents.workspaceId, w4p.id));
+  for (const c of posted.filter((x) => x.scheduledAt && x.scheduledAt < now)) {
+    const k = c.title.length;
+    await d.recordMetrics(ctx, c.clientId, [
+      { date: iso(c.scheduledAt!), metric: 'reach', value: 2000 + k * 230, contentId: c.id },
+      { date: iso(c.scheduledAt!), metric: 'likes', value: 90 + k * 9, contentId: c.id },
+      { date: iso(c.scheduledAt!), metric: 'saves', value: 10 + k * 2, contentId: c.id },
+    ]);
+  }
+  await d.addLearning(ctx, {
+    clientId: C('Terra Mar'),
+    title: 'Reels de bastidores da cozinha geram 2× mais salvamentos que fotos de prato',
+    evidence: 'Média dos últimos 3 meses',
+    confidence: 'high',
+  });
+  await d.addLearning(ctx, {
+    clientId: C('Café Aurora'),
+    title: 'Posts publicados às 7h têm alcance maior que às 12h',
+    evidence: 'Teste A/B de 4 semanas',
+    confidence: 'medium',
+  });
+  await d.addLearning(ctx, {
+    title: 'Carrosséis educativos convertem mais leads em clínicas',
+    confidence: 'low',
+  });
+  log('performance');
+
   // ───────── Despesas (6 meses) ─────────
   const cats = await db.select().from(s.expenseCategories).where(eq(s.expenseCategories.workspaceId, w4p.id));
   const cat = (n: string) => cats.find((c) => c.name === n)!.id;
