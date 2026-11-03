@@ -4,7 +4,7 @@ import { adminDb, closeAll } from '../src/client';
 import { PERMISSIONS, SYSTEM_ROLES } from '../src/permissions';
 import * as s from '../src/schema';
 
-/** Seed mínimo e idempotente: workspace 4P, workspace de teste, permissões, cargos, calendário, feriados e políticas. */
+/** Seed de plataforma, idempotente: workspaces, permissões, cargos, calendário, feriados e políticas de SLA. */
 const db = adminDb();
 const NAMES: Record<string, string> = {
   '2026-01-01': 'Confraternização Universal',
@@ -111,34 +111,7 @@ await db.transaction(async (tx) => {
       .onConflictDoNothing();
   }
 
-  const users = [
-    ['manuella@agencia4p.local', 'Manuella', 'admin'],
-    ['bia@agencia4p.local', 'Bia', 'atendimento'],
-    ['rafa@agencia4p.local', 'Rafa', 'designer'],
-    ['leo@agencia4p.local', 'Leo', 'comercial'],
-    ['lia@agencia4p.local', 'Lia', 'financeiro'],
-  ] as const;
-  const [ws4p] = await tx.select().from(s.workspaces).where(eq(s.workspaces.slug, 'agencia-4p'));
-  for (const [email, name, roleKey] of users) {
-    await tx.insert(s.users).values({ email, name }).onConflictDoNothing();
-    const [u] = await tx.select().from(s.users).where(eq(s.users.email, email));
-    await tx
-      .insert(s.workspaceMembers)
-      .values({ workspaceId: ws4p!.id, userId: u!.id })
-      .onConflictDoNothing();
-    const [m] = await tx
-      .select()
-      .from(s.workspaceMembers)
-      .where(and(eq(s.workspaceMembers.workspaceId, ws4p!.id), eq(s.workspaceMembers.userId, u!.id)));
-    const [r] = await tx
-      .select()
-      .from(s.roles)
-      .where(and(eq(s.roles.workspaceId, ws4p!.id), eq(s.roles.key, roleKey)));
-    await tx
-      .insert(s.memberRoles)
-      .values({ workspaceId: ws4p!.id, memberId: m!.id, roleId: r!.id })
-      .onConflictDoNothing();
-  }
+  // Usuários, equipe e dados de demonstração: apps/web/scripts/seed-demo.ts (precisa do Better Auth).
   await tx.execute(sql`select 1`);
 });
 

@@ -5,3 +5,5 @@ dist
 docs/reference
 *.log
 .turbo
+apps/e2e/test-results
+apps/e2e/playwright-report

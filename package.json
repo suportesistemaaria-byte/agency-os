@@ -19,7 +19,7 @@
     "db:up": "docker compose up -d postgres",
     "db:roles": "pnpm --filter @aos/db roles",
     "db:migrate": "pnpm --filter @aos/db migrate",
-    "db:seed": "pnpm --filter @aos/db seed",
+    "db:seed": "pnpm --filter @aos/db seed && pnpm --filter @aos/web seed:demo",
     "db:reset": "pnpm --filter @aos/db reset",
     "db:studio": "pnpm --filter @aos/db studio"
   },

@@ -3,7 +3,7 @@
 Sistema operacional da Agência 4P: Comercial → Clientes → Operação → Conteúdo → Aprovações → Financeiro → Performance.
 A **arquitetura técnica V3** (`docs/ARCHITECTURE.md`) é a fonte de verdade. Decisões em `docs/DECISIONS.md`.
 
-Status: **Sprint 0 (fundação) concluído e validado** (`docs/validation/SPRINT-0-FINAL-VALIDATION.md`). Ainda não há telas de negócio.
+Status: **CHECKPOINT 1 — Blocos 1 a 7 + Financeiro básico** (veja `docs/CHECKPOINT-1.md`). Demonstração: `manuella@demo.local` / `demo1234` (só dev).
 
 ## Requisitos
 
@@ -20,8 +20,8 @@ cp .env.example .env         # ajuste se não usar os padrões do Docker
 pnpm db:up                   # Postgres 16 em localhost:5432
 pnpm db:roles                # cria o papel aos_app (RLS vale para ele)
 pnpm db:migrate              # aplica packages/db/migrations
-pnpm db:seed                 # workspace Agência 4P + workspace de teste, cargos, expediente, feriados, SLA
-pnpm dev                     # http://localhost:3000 (página técnica da fundação)
+pnpm db:seed                 # plataforma (cargos, expediente, feriados, SLA) + demonstração da Agência 4P
+pnpm dev                     # http://localhost:3000 → login com manuella@demo.local / demo1234
 pnpm dev:jobs                # em outro terminal: servidor local do Inngest (http://localhost:8288)
 ```
 
@@ -56,13 +56,15 @@ A página inicial mostra "Eventos pendentes no outbox" voltando a 0.
 
 ```
 apps/
-  web/                 Next.js (App Router): UI, rotas de API, endpoint do Inngest
+  web/                 Next.js (App Router): UI, tRPC, Better Auth, endpoint do Inngest
+  e2e/                 testes Playwright
 packages/
   sla/                 engine de SLA (pura, sem I/O) + testes
   db/                  schema Drizzle, migrações SQL, RLS, seeds, testes de isolamento
   events/              catálogo de eventos + outbox (emit, claim, mark)
   audit/               Audit Service (diff + redação de segredos)
   core/                runCommand: transação + evento + auditoria
+  domain/              serviços de domínio (crm, clientes, tarefas, SLA, conteúdo, aprovações, financeiro, automações)
   jobs/                Inngest: relay do outbox, watchdog, consumidores
   logger/              logs estruturados (pino) com redação
   env/                 validação de variáveis de ambiente (zod)

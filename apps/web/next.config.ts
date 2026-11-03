@@ -12,6 +12,7 @@ const config: NextConfig = {
     '@aos/logger',
     '@aos/sla',
     '@aos/audit',
+    '@aos/domain',
   ],
   serverExternalPackages: ['pg', 'pino'],
   poweredByHeader: false,

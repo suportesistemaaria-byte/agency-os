@@ -16,11 +16,16 @@ export interface CommandOptions {
   afterCommit?: () => Promise<void>;
 }
 
-let defaultAfterCommit: (() => Promise<void>) | undefined;
+/**
+ * Registro no escopo do processo (globalThis): o Next empacota instrumentation e rotas em bundles
+ * separados, cada um com sua cópia do módulo; uma variável de módulo não seria vista pelas rotas.
+ */
+const HOOK = Symbol.for('aos.afterCommitHook');
+type G = typeof globalThis & { [HOOK]?: () => Promise<void> };
 
-/** O app web registra aqui o "cutucão" no relay (inngest.send('aos/outbox.flush')). */
+/** O app web registra aqui o "cutucão" no relay (inngest.send('aos/outbox.flush') ou despacho local). */
 export function setAfterCommitHook(fn: () => Promise<void>): void {
-  defaultAfterCommit = fn;
+  (globalThis as G)[HOOK] = fn;
 }
 
 /**
@@ -48,7 +53,7 @@ export async function runCommand<R>(
     }),
   );
   log.info({ ms: Date.now() - started, emitted }, 'command.ok');
-  const hook = opts.afterCommit ?? defaultAfterCommit;
+  const hook = opts.afterCommit ?? (globalThis as G)[HOOK];
   if (emitted > 0 && hook) {
     hook().catch((err: unknown) => log.warn({ err: String(err) }, 'outbox.flush_failed (o cron entregará)'));
   }

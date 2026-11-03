@@ -20,6 +20,10 @@ export const serverSchema = z.object({
   SENTRY_DSN: optional,
   AXIOM_TOKEN: optional,
   AXIOM_DATASET: optional,
+  BETTER_AUTH_SECRET: optional,
+  /** local = outbox despachado no próprio processo (dev sem Inngest); inngest = relay + Inngest. */
+  EVENT_DISPATCH: z.enum(['local', 'inngest']).default('local'),
+  STORAGE_DIR: optional,
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;
@@ -36,6 +40,9 @@ export function serverEnv(source: Record<string, string | undefined> = process.e
   const env = parsed.data;
   if (env.APP_ENV === 'production' && (!env.INNGEST_SIGNING_KEY || !env.SENTRY_DSN)) {
     throw new Error('Produção exige INNGEST_SIGNING_KEY e SENTRY_DSN.');
+  }
+  if (env.APP_ENV === 'production' && (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32)) {
+    throw new Error('Produção exige BETTER_AUTH_SECRET com 32+ caracteres.');
   }
   if (source === process.env) cached = env;
   return env;

@@ -22,6 +22,9 @@ jobs:
       DATABASE_ADMIN_URL: postgres://aos_owner:aos_owner@localhost:5432/agency_os
       APP_DB_PASSWORD: aos_app_ci
       INNGEST_DEV: '1'
+      EVENT_DISPATCH: local
+      BETTER_AUTH_SECRET: ci-only-secret-ci-only-secret-ci-only
+      APP_URL: http://localhost:3100
       TZ: UTC
     steps:
       - uses: actions/checkout@v4
@@ -36,3 +39,5 @@ jobs:
       - run: pnpm db:roles && pnpm db:migrate && pnpm db:seed
       - run: pnpm test:integration
       - run: pnpm build
+      - run: pnpm --filter @aos/e2e exec playwright install --with-deps chromium
+      - run: pnpm --filter @aos/e2e test:e2e

@@ -5,7 +5,15 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["DATABASE_URL", "SENTRY_*", "NEXT_PUBLIC_*", "INNGEST_*"]
+      "env": [
+        "APP_URL",
+        "BETTER_AUTH_SECRET",
+        "DATABASE_URL",
+        "EVENT_DISPATCH",
+        "INNGEST_*",
+        "NEXT_PUBLIC_*",
+        "SENTRY_*"
+      ]
     },
     "lint": {},
     "typecheck": {
@@ -14,7 +22,7 @@
     "test": {},
     "test:integration": {
       "cache": false,
-      "env": ["DATABASE_URL", "DATABASE_ADMIN_URL", "APP_DB_PASSWORD"]
+      "env": ["APP_DB_PASSWORD", "DATABASE_ADMIN_URL", "DATABASE_URL", "LOG_LEVEL", "STORAGE_DIR"]
     },
     "dev": {
       "cache": false,
