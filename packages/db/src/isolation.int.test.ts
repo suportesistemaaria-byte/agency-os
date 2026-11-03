@@ -83,6 +83,8 @@ const TENANT_TABLES = [
   'performance_metrics',
   'performance_goals',
   'learnings',
+  'notification_preferences',
+  'notification_deliveries',
 ];
 
 describe.skipIf(!hasDb())('isolamento por workspace (RLS)', () => {

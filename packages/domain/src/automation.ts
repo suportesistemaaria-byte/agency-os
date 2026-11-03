@@ -1,4 +1,4 @@
-import { and, eq, ne } from 'drizzle-orm';
+import { and, eq, inArray, ne } from 'drizzle-orm';
 import { schema as s } from '@aos/db';
 import type { CommandKit } from '@aos/core';
 import type { ClaimedEvent } from '@aos/events';
@@ -51,9 +51,9 @@ export const DEFAULT_RULES = [
   },
   {
     key: 'contract_expiring_renewal',
-    name: 'Contrato vencendo (90 dias) → oportunidade de renovação',
+    name: 'Contrato vencendo (90 dias, sem renovação) → oportunidade de renovação e aviso',
     trigger: 'contract.expiring',
-    actions: [{ type: 'notify_owner' }],
+    actions: [{ type: 'create_renewal', withinDays: 90 }, { type: 'notify_owner' }],
   },
   {
     key: 'sla_alerts',
@@ -81,6 +81,72 @@ type Handler = (kit: CommandKit, ev: ClaimedEvent, action: Action) => Promise<Re
 const p = (ev: ClaimedEvent) => ev.payload as Record<string, string>;
 
 const HANDLERS: Record<string, Handler> = {
+  /** contract.expiring → oportunidade de renovação ligada ao cliente, uma por contrato (se ainda não houver). */
+  async create_renewal(kit, ev, action) {
+    const { tx, ctx } = kit;
+    const pl = ev.payload as { contractId: string; clientId: string; daysLeft: number };
+    if (pl.daysLeft > Number(action.withinDays ?? 90)) return { skipped: 'fora da janela' };
+    const [contract] = await tx.select().from(s.contracts).where(eq(s.contracts.id, pl.contractId));
+    if (!contract || contract.status !== 'active') return { skipped: 'contrato não vigente' };
+    const open = await tx
+      .select({ id: s.opportunities.id })
+      .from(s.opportunities)
+      .where(
+        and(
+          eq(s.opportunities.clientId, pl.clientId),
+          eq(s.opportunities.type, 'renewal'),
+          inArray(s.opportunities.state, ['open', 'no_response', 'paused', 'won']),
+        ),
+      );
+    if (open.length) return { skipped: 'renovação já em andamento', opportunityId: open[0]!.id };
+    const [client] = await tx.select().from(s.clients).where(eq(s.clients.id, pl.clientId));
+    const [pipe] = await tx.select().from(s.pipelines).where(eq(s.pipelines.isDefault, true));
+    const [stage] = await tx
+      .select()
+      .from(s.pipelineStages)
+      .where(eq(s.pipelineStages.pipelineId, pipe!.id))
+      .orderBy(s.pipelineStages.position)
+      .limit(1);
+    const items = await tx.select().from(s.contractItems).where(eq(s.contractItems.contractId, contract.id));
+    const mrr = items.filter((i) => i.kind === 'recurring').reduce((a, i) => a + i.amountCents, 0);
+    const [opp] = await tx
+      .insert(s.opportunities)
+      .values({
+        workspaceId: ctx.workspaceId,
+        pipelineId: pipe!.id,
+        stageId: stage!.id,
+        organizationId: client!.organizationId,
+        clientId: client!.id,
+        type: 'renewal',
+        ownerId: client!.ownerId,
+        title: `Renovação · ${client!.name}`,
+        mrrCents: mrr,
+        source: 'Automação: contrato vencendo',
+      })
+      .returning();
+    const due = await dueFromPolicy(
+      tx,
+      { model: 'business_days', amount: 2, rule: 'A1_same_time' },
+      new Date(),
+    );
+    await tx.insert(s.nextActions).values({
+      workspaceId: ctx.workspaceId,
+      opportunityId: opp!.id,
+      title: `Propor renovação (contrato vence em ${pl.daysLeft} dias)`,
+      dueAt: due,
+      ownerId: client!.ownerId,
+      source: 'automation',
+      idempotencyKey: `renewal:${ev.id}`,
+    });
+    await kit.emit({
+      type: 'opportunity.created',
+      entityType: 'opportunity',
+      entityId: opp!.id,
+      payload: { opportunityId: opp!.id },
+    });
+    return { opportunityId: opp!.id };
+  },
+
   /** Follow-ups em dias úteis pelo @aos/sla, idempotentes por evento. */
   async create_followups(kit, ev, action) {
     const { tx, ctx } = kit;
@@ -331,8 +397,42 @@ const matches = (trigger: string, type: string) => trigger.split('|').includes(t
  * Motor TRIGGER → CONDITION → ACTION (V3, seção 9). Cada (regra, evento) executa uma única vez:
  * a execução é gravada na MESMA transação das ações (sucesso) — repetir o evento não duplica nada.
  */
+export const MAX_DEPTH = 3;
+
+/** Condições simples sobre o payload: { "daysLeft": { "lte": 90 }, "type": { "eq": "video" } }. */
+export function conditionsMatch(
+  conditions: Record<string, unknown> | null | undefined,
+  payload: Record<string, unknown>,
+): boolean {
+  for (const [path, rule] of Object.entries(conditions ?? {})) {
+    const v = path
+      .split('.')
+      .reduce<unknown>(
+        (o, k) => (o && typeof o === 'object' ? (o as Record<string, unknown>)[k] : undefined),
+        payload,
+      );
+    for (const [op, expected] of Object.entries((rule ?? {}) as Record<string, unknown>)) {
+      const ok =
+        op === 'eq'
+          ? v === expected
+          : op === 'neq'
+            ? v !== expected
+            : op === 'lte'
+              ? Number(v) <= Number(expected)
+              : op === 'gte'
+                ? Number(v) >= Number(expected)
+                : op === 'in'
+                  ? Array.isArray(expected) && expected.includes(v)
+                  : false;
+      if (!ok) return false;
+    }
+  }
+  return true;
+}
+
 export async function handleEvent(ev: ClaimedEvent): Promise<{ rule: string; status: string }[]> {
-  const ctx = systemCtx(ev.workspace_id, 'automation');
+  // Ações das regras rodam um nível abaixo do evento: regra disparando regra para no limite (anti-loop).
+  const ctx = systemCtx(ev.workspace_id, 'automation', (ev.depth ?? 0) + 1);
   const rules = await command('automation.loadRules', ctx, ({ tx }) =>
     tx
       .select()
@@ -356,7 +456,9 @@ export async function handleEvent(ev: ClaimedEvent): Promise<{ rule: string; sta
           );
         if (done.length) return 'duplicate';
         const result: Record<string, unknown> = {};
-        for (const action of rule.actions as Action[]) {
+        if ((ev.depth ?? 0) >= MAX_DEPTH) result.skipped = `profundidade máxima (${MAX_DEPTH}) atingida`;
+        else if (!conditionsMatch(rule.conditions, ev.payload)) result.skipped = 'condições não atendidas';
+        for (const action of result.skipped ? [] : (rule.actions as Action[])) {
           const h = HANDLERS[action.type];
           if (!h) throw new Error(`Ação desconhecida: ${action.type}`);
           Object.assign(result, await h(kit, ev, action));

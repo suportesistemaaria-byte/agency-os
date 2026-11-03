@@ -18,6 +18,8 @@ export interface Ctx extends PermSubject {
   clientId?: string | null;
   contactId?: string | null;
   portalFinance?: boolean;
+  /** Profundidade da cadeia de automações (anti-loop). */
+  depth?: number;
 }
 
 export const tenant = (ctx: Ctx): TenantContext => ({
@@ -27,6 +29,7 @@ export const tenant = (ctx: Ctx): TenantContext => ({
   requestId: ctx.requestId,
   clientId: ctx.clientId ?? null,
   portalFinance: ctx.portalFinance ?? false,
+  depth: ctx.depth ?? 0,
 });
 
 /** Leitura com RLS (papel da aplicação + workspace fixado na transação). */
@@ -44,8 +47,13 @@ export function assertCan(ctx: Ctx, perm: string, resource?: Resource): void {
 const ALL_PERMS: Perms = new Map(Object.keys(PERMISSIONS).map((k) => [k, 'all' as const]));
 
 /** Contexto de automação/sistema: age em nome do workspace, sem usuário. */
-export function systemCtx(workspaceId: string, actorType: 'system' | 'automation' = 'automation'): Ctx {
+export function systemCtx(
+  workspaceId: string,
+  actorType: 'system' | 'automation' = 'automation',
+  depth = 0,
+): Ctx {
   return {
+    depth,
     workspaceId,
     userId: null,
     memberId: '00000000-0000-0000-0000-000000000000',

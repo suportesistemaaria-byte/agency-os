@@ -33,6 +33,7 @@ export async function emit<T extends EventType>(
       actorId: ctx.userId ?? null,
       payload,
       idempotencyKey: e.idempotencyKey ?? null,
+      depth: ctx.depth ?? 0,
     })
     .onConflictDoNothing({ target: [schema.domainEvents.workspaceId, schema.domainEvents.idempotencyKey] })
     .returning({ id: schema.domainEvents.id });
@@ -52,6 +53,7 @@ export type ClaimedEvent = {
   payload: Record<string, unknown>;
   occurred_at: string;
   attempts: number;
+  depth: number;
 };
 
 /** Backoff exponencial com teto de 1 hora. */
@@ -71,7 +73,7 @@ export async function claimBatch(admin: Db, limit = 100): Promise<ClaimedEvent[]
       limit ${limit}
       for update skip locked
     )
-    returning d.id, d.workspace_id, d.type, d.version, d.entity_type, d.entity_id, d.actor_type, d.actor_id, d.payload, d.occurred_at, d.attempts`);
+    returning d.id, d.workspace_id, d.type, d.version, d.entity_type, d.entity_id, d.actor_type, d.actor_id, d.payload, d.occurred_at, d.attempts, d.depth`);
   return r.rows;
 }
 

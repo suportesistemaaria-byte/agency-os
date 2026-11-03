@@ -22,6 +22,8 @@ export const domainEvents = pgTable(
     availableAt: timestamp('available_at', { withTimezone: true }).notNull().defaultNow(),
     processedAt: timestamp('processed_at', { withTimezone: true }),
     attempts: integer('attempts').notNull().default(0),
+    /** Profundidade da cadeia de automações (regra disparando regra); limite 3. */
+    depth: integer('depth').notNull().default(0),
     lastError: text('last_error'),
   },
   (t) => [

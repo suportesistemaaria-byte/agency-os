@@ -604,6 +604,23 @@ export const appRouter = router({
       .input(z.object({ id, status: z.enum(['hypothesis', 'validated', 'discarded']) }))
       .mutation(({ ctx, input }) => d.setLearningStatus(ctx.ctx, input.id, input.status)),
   }),
+  automation: router({
+    setActive: p
+      .input(z.object({ ruleId: id, active: z.boolean() }))
+      .mutation(({ ctx, input }) => d.setRuleActive(ctx.ctx, input.ruleId, input.active)),
+    retry: p
+      .input(z.object({ eventId: id }))
+      .mutation(({ ctx, input }) => d.retryEvent(ctx.ctx, input.eventId)),
+  }),
+  setPreference: p
+    .input(
+      z.object({
+        eventType: z.string(),
+        channel: z.enum(['inApp', 'email', 'whatsapp']),
+        value: z.boolean(),
+      }),
+    )
+    .mutation(({ ctx, input }) => d.setPreference(ctx.ctx, input.eventType, input.channel, input.value)),
   portalInvite: p
     .input(z.object({ contactId: id }))
     .mutation(({ ctx, input }) => d.createPortalInvite(ctx.ctx, input.contactId)),

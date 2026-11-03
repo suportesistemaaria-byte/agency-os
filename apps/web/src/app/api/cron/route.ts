@@ -5,6 +5,7 @@ import {
   markOverdueInvoices,
   monthlyBilling,
   snapshotHealth,
+  checkExpiringContracts,
   slaTick,
 } from '@aos/domain';
 
@@ -19,6 +20,7 @@ export async function POST() {
   const billed = await monthlyBilling();
   const recurring = await generateRecurringExpenses();
   const health = await snapshotHealth();
+  const expiring = await checkExpiringContracts();
   const drained = await kickDispatcher();
-  return NextResponse.json({ sla, overdue, billed, recurring, health, drained });
+  return NextResponse.json({ sla, overdue, billed, recurring, health, expiring, drained });
 }

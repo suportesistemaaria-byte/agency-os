@@ -22,6 +22,7 @@ const asClaimed = (e: typeof s.domainEvents.$inferSelect): ClaimedEvent => ({
   payload: e.payload,
   occurred_at: e.occurredAt.toISOString(),
   attempts: e.attempts,
+  depth: e.depth,
 });
 
 describe.skipIf(!hasDb())('automações (TRIGGER → ACTION sobre o outbox)', () => {

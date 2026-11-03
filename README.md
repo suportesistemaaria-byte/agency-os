@@ -3,7 +3,7 @@
 Sistema operacional da Agência 4P: Comercial → Clientes → Operação → Conteúdo → Aprovações → Financeiro → Performance.
 A **arquitetura técnica V3** (`docs/ARCHITECTURE.md`) é a fonte de verdade. Decisões em `docs/DECISIONS.md`.
 
-Status: **CHECKPOINT 1 — Blocos 1 a 7 + Financeiro básico** (veja `docs/CHECKPOINT-1.md`). Demonstração: `manuella@demo.local` / `demo1234` (só dev).
+Status: **Blocos 1 a 12 implementados** (CHECKPOINT 1 em `docs/CHECKPOINT-1.md`; entrega final em `docs/ENTREGA-FINAL.md`). Equipe: `manuella@demo.local` · Portal: `contato@cafeaurora.demo.local` (senha de dev `demo1234`).
 
 ## Requisitos
 

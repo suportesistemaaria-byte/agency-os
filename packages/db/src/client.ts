@@ -41,6 +41,8 @@ export interface TenantContext {
   clientId?: string | null;
   /** Portal: contato com a flag "recebe financeiro" (libera faturas do próprio cliente). */
   portalFinance?: boolean;
+  /** Profundidade da cadeia de automações que originou esta ação (anti-loop). */
+  depth?: number;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

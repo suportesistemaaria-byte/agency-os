@@ -15,6 +15,7 @@ export default async function SettingsLayout({ children }: { children: ReactNode
           ['/configuracoes', 'Usuários e convites'],
           ['/configuracoes/cargos', 'Cargos e permissões'],
           ['/configuracoes/sla', 'Expediente, feriados e SLA'],
+          ['/configuracoes/automacoes', 'Automações'],
         ].map(([h, l]) => (
           <Link
             key={h}

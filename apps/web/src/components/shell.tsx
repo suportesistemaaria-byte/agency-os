@@ -316,6 +316,7 @@ function ShellInner({
             </button>
           }
           items={[
+            { label: 'Preferências de notificação', onSelect: () => router.push('/preferencias') },
             { label: 'Página técnica (fundação)', onSelect: () => router.push('/sistema') },
             {
               label: 'Sair',

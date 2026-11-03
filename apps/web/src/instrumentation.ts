@@ -13,6 +13,7 @@ export async function register(): Promise<void> {
         monthlyBilling,
         generateRecurringExpenses,
         snapshotHealth,
+        checkExpiringContracts,
       } = await import('@aos/domain');
       setAfterCommitHook(async () => {
         void kickDispatcher();
@@ -24,6 +25,7 @@ export async function register(): Promise<void> {
           await monthlyBilling().catch(() => undefined);
           await generateRecurringExpenses().catch(() => undefined);
           await snapshotHealth().catch(() => undefined);
+          await checkExpiringContracts().catch(() => undefined);
           await kickDispatcher().catch(() => undefined);
         };
         setTimeout(tick, 5_000);

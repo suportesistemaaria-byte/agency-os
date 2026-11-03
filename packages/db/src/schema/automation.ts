@@ -47,3 +47,44 @@ export const automationExecutions = pgTable(
     wsFk('automation_executions', t, t.ruleId, automationRules),
   ],
 );
+
+/** Preferência por pessoa × tipo de evento × canal (V3, seção 10). Sem registro = padrão (in-app ligado). */
+export const notificationPreferences = pgTable(
+  'notification_preferences',
+  {
+    id: id(),
+    workspaceId: ws(),
+    memberId: uuid('member_id').notNull(),
+    eventType: text('event_type').notNull(),
+    inApp: boolean('in_app').notNull().default(true),
+    email: boolean('email').notNull().default(false),
+    whatsapp: boolean('whatsapp').notNull().default(false),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    wsUnique('notification_preferences', t),
+    unique('notification_preferences_key').on(t.memberId, t.eventType),
+  ],
+);
+
+/** Entrega por canal: uma por (notificação, canal) — nunca envio duplicado. */
+export const notificationDeliveries = pgTable(
+  'notification_deliveries',
+  {
+    id: id(),
+    workspaceId: ws(),
+    notificationId: uuid('notification_id').notNull(),
+    channel: text('channel').notNull(),
+    status: text('status').notNull(),
+    provider: text('provider'),
+    providerId: text('provider_id'),
+    attempts: integer('attempts').notNull().default(1),
+    error: text('error'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    wsUnique('notification_deliveries', t),
+    unique('notification_deliveries_once').on(t.notificationId, t.channel),
+  ],
+);

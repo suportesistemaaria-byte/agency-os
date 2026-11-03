@@ -24,6 +24,7 @@ export const serverSchema = z.object({
   /** local = outbox despachado no próprio processo (dev sem Inngest); inngest = relay + Inngest. */
   EVENT_DISPATCH: z.enum(['local', 'inngest']).default('local'),
   STORAGE_DIR: optional,
+  WHATSAPP_ENABLED: z.enum(['0', '1']).default('0'),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;

@@ -103,6 +103,8 @@ export const CRUMB: Record<string, string> = {
   usuarios: 'Usuários',
   cargos: 'Cargos e permissões',
   sla: 'Expediente e SLA',
+  automacoes: 'Automações',
+  preferencias: 'Preferências',
   inteligencia: 'Inteligência',
   conhecimento: 'Conhecimento',
 };

@@ -53,6 +53,25 @@
 
 | Rate limit do login | limitador nativo do Better Auth (memória, ativo em produção) com mensagem própria na tela | Upstash entra quando houver mais de uma instância |
 
+## Decisões de implementação dos Blocos 8 a 12 (baixo risco, dentro da V3)
+
+| Tema                     | Escolha                                                                                                                                                           | Motivo                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Aditivo                  | `contract_amendments` (somente inclusão) + itens com `amendment_id`; setup do aditivo vira cobrança avulsa; renovação estende 12 meses                            | V3: upsell/renovação por aditivo, histórico preservado                            |
+| Fluxo de caixa           | calculado (pagamentos + despesas pagas; projeção por vencimentos), sem tabela `cash_movements`                                                                    | Mesma informação, sem dado duplicado; tabela entra com conta bancária/conciliação |
+| Despesa recorrente       | campo `recurring = 'monthly'`; cron diário gera a competência seguinte (idempotente)                                                                              | Simples e auditável                                                               |
+| Decisão de reunião       | `meeting_decisions` → tarefa do responsável (`origin_type = meeting`)                                                                                             | V3: decisão vira tarefa                                                           |
+| Health score diário      | snapshot em `client_health_scores` no cron; `client.health_changed` quando varia ≥ 10 pontos                                                                      | Histórico do porquê sem recalcular o passado                                      |
+| Portal: isolamento       | política RESTRITIVA `portal_scope` em toda tabela com `workspace_id` (lista explícita do que o contato vê; resto = nada) + `app.client_id` no contexto            | V3, seção 4: "RLS adicional limita a client_id"; fail-closed                      |
+| Portal: sessão           | 30 dias para usuário só de portal (hook de sessão); aprovar exige sessão com menos de 12 h ou senha de novo                                                       | Decisão 7 da V3                                                                   |
+| Portal: equipe           | nomes da equipe interna aparecem como "Equipe Agência 4P"; usuários internos invisíveis pela RLS                                                                  | "Equipe não autorizada" não aparece                                               |
+| Métricas                 | totais do perfil só com métricas sem conteúdo; métricas por conteúdo alimentam o ranking; reimportar o mesmo ponto faz upsert                                     | Evita dupla contagem e duplicidade de CSV                                         |
+| Permissão de performance | leitura e registro com `reports.view` + escopo do cliente                                                                                                         | Sem nova permissão no catálogo; aprendizados internos                             |
+| Anti-loop                | `domain_events.depth`; ações de regra rodam em `depth + 1`; acima de 3, a regra é registrada como ignorada                                                        | V3, seção 9: profundidade máxima 3                                                |
+| Condições                | JSON simples por caminho do payload (`eq`, `neq`, `lte`, `gte`, `in`)                                                                                             | Suficiente para as regras iniciais; JSON Logic completo depois                    |
+| Canais                   | in-app sempre; e-mail por adaptador (log em dev); WhatsApp por adaptador desligado (`WHATSAPP_ENABLED`); `notification_deliveries` único por (notificação, canal) | V3, seções 10 e 11; nenhum envio duplicado                                        |
+| contract.expiring        | cron emite uma vez por contrato e marco (90/60/30/15/7 dias, por faixa); regra cria a oportunidade de renovação uma única vez                                     | V3, seção 9                                                                       |
+
 ## Pendentes de confirmação (não bloqueiam a Sprint 1)
 
 - Repositório Git e organização Vercel/Neon/Inngest/Sentry em nome da Agência 4P.
