@@ -37,6 +37,10 @@ export interface TenantContext {
   userId?: string | null;
   actorType?: 'user' | 'client_contact' | 'system' | 'automation';
   requestId?: string;
+  /** Portal: fixa o cliente do contato; a RLS restritiva limita tudo a ele. */
+  clientId?: string | null;
+  /** Portal: contato com a flag "recebe financeiro" (libera faturas do próprio cliente). */
+  portalFinance?: boolean;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,9 +52,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export async function withTenant<T>(db: Db, ctx: TenantContext, fn: (tx: Tx) => Promise<T>): Promise<T> {
   if (!UUID.test(ctx.workspaceId)) throw new Error('workspaceId inválido');
   if (ctx.userId && !UUID.test(ctx.userId)) throw new Error('userId inválido');
+  if (ctx.clientId && !UUID.test(ctx.clientId)) throw new Error('clientId inválido');
   return db.transaction(async (tx) => {
     await tx.execute(
-      sql`select set_config('app.workspace_id', ${ctx.workspaceId}, true), set_config('app.user_id', ${ctx.userId ?? ''}, true)`,
+      sql`select set_config('app.workspace_id', ${ctx.workspaceId}, true), set_config('app.user_id', ${ctx.userId ?? ''}, true),
+        set_config('app.client_id', ${ctx.clientId ?? ''}, true), set_config('app.portal_finance', ${ctx.portalFinance ? '1' : ''}, true)`,
     );
     return fn(tx);
   });

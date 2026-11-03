@@ -14,6 +14,10 @@ export interface Ctx extends PermSubject {
   email: string;
   roleKeys: string[];
   timezone: string;
+  /** Portal do cliente: contato e cliente fixos (RLS restritiva por client_id). */
+  clientId?: string | null;
+  contactId?: string | null;
+  portalFinance?: boolean;
 }
 
 export const tenant = (ctx: Ctx): TenantContext => ({
@@ -21,6 +25,8 @@ export const tenant = (ctx: Ctx): TenantContext => ({
   userId: ctx.userId,
   actorType: ctx.actorType,
   requestId: ctx.requestId,
+  clientId: ctx.clientId ?? null,
+  portalFinance: ctx.portalFinance ?? false,
 });
 
 /** Leitura com RLS (papel da aplicação + workspace fixado na transação). */

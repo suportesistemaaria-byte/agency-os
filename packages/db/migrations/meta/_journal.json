@@ -57,6 +57,13 @@
       "when": 1793606820000,
       "tag": "0007_management",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793606880000,
+      "tag": "0008_portal",
+      "breakpoints": true
     }
   ]
 }

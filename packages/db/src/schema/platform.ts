@@ -199,6 +199,9 @@ export const invitations = pgTable(
     workspaceId: workspaceId().references(() => workspaces.id, { onDelete: 'cascade' }),
     email: text('email').notNull(),
     name: text('name'),
+    /** member = equipe; portal = contato do cliente. */
+    kind: text('kind').notNull().default('member'),
+    contactId: uuid('contact_id'),
     roleKeys: text('role_keys').array().notNull(),
     token: text('token').notNull().unique(),
     invitedBy: uuid('invited_by'),

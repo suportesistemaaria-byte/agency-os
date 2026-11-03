@@ -4,7 +4,7 @@ import { nextCookies } from 'better-auth/next-js';
 import { twoFactor } from 'better-auth/plugins';
 import pg from 'pg';
 import { logger } from '@aos/logger';
-import { hasPendingInvite } from '@aos/domain';
+import { hasPendingInvite, isPortalOnlyUser } from '@aos/domain';
 
 const ts = { createdAt: 'created_at', updatedAt: 'updated_at' };
 
@@ -58,6 +58,15 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
+    session: {
+      create: {
+        async before(session) {
+          if (await isPortalOnlyUser(session.userId))
+            return { data: { ...session, expiresAt: new Date(Date.now() + 30 * 86_400_000) } };
+          return { data: session };
+        },
+      },
+    },
     user: {
       create: {
         async before(user) {

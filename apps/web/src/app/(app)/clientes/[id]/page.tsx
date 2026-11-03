@@ -429,6 +429,7 @@ export default async function ClientPage({
                       receivesNotifications: x.contact.receivesNotifications,
                     },
                     isPrimary: x.contact.isPrimary,
+                    portal: Boolean(x.contact.userId),
                   }))}
                 />
               </Card>

@@ -98,6 +98,15 @@ describe.skipIf(!hasDb())('isolamento por workspace (RLS)', () => {
     for (const t of TENANT_TABLES) expect(rows.rows.map((r) => r.table_name)).toContain(t);
   });
 
+  it('toda tabela com workspace_id tem a política restritiva do portal (fail-closed)', async () => {
+    const rows = await adminDb().execute<{ table_name: string; portal: number }>(sql`
+      select c.relname as table_name,
+             (select count(*)::int from pg_policies p where p.tablename = c.relname and p.policyname = 'portal_scope' and p.permissive = 'RESTRICTIVE') as portal
+      from pg_class c join information_schema.columns col on col.table_name = c.relname and col.column_name = 'workspace_id' and col.table_schema = 'public'
+      where c.relkind = 'r' and c.relnamespace = 'public'::regnamespace`);
+    expect(rows.rows.filter((r) => r.portal !== 1).map((r) => r.table_name)).toEqual([]);
+  });
+
   it('o papel da aplicação não ignora RLS nem é dono das tabelas', async () => {
     const r = await appDb().execute<{ bypass: boolean; owner: boolean }>(sql`
       select rolbypassrls as bypass,

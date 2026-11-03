@@ -38,6 +38,7 @@ export function ContactsEditor({
     email: string | null;
     role: string | null;
     isPrimary: boolean;
+    portal?: boolean;
     flags: Flags;
   }[];
 }) {
@@ -53,6 +54,29 @@ export function ContactsEditor({
             <span>
               <span className="font-medium">{c.name}</span>{' '}
               {c.isPrimary && <span className="text-[11px] text-faint">· principal</span>}
+              {c.portal ? (
+                <span className="ml-2 rounded bg-ok-bg px-1.5 text-[11px] text-ok">acessa o portal</span>
+              ) : (
+                canEdit &&
+                c.email && (
+                  <button
+                    className="ml-2 text-[11.5px] text-info underline"
+                    onClick={async () => {
+                      const r = await run(
+                        () => api.portalInvite.mutate({ contactId: c.id }),
+                        'Convite do portal criado.',
+                      );
+                      if (r)
+                        window.prompt(
+                          'Envie este link ao contato (em dev o e-mail não sai):',
+                          `${window.location.origin}/convite/${r.token}`,
+                        );
+                    }}
+                  >
+                    Convidar para o portal
+                  </button>
+                )
+              )}
               <span className="block text-[12px] text-muted">
                 {[c.role, c.email].filter(Boolean).join(' · ')}
               </span>

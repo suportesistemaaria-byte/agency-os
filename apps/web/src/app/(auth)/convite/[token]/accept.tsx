@@ -27,7 +27,8 @@ export function AcceptInvite({
     if (r.error) return setError(r.error.message ?? 'Não foi possível criar a conta.');
     const res = await fetch('/api/invites/accept', { method: 'POST', body: JSON.stringify({ token }) });
     if (!res.ok) return setError('Convite inválido.');
-    router.push('/hoje');
+    const j = (await res.json()) as { portal?: boolean };
+    router.push(j.portal ? '/portal' : '/hoje');
     router.refresh();
   }
   return (

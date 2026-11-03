@@ -414,6 +414,38 @@ async function main() {
     log('cliente', c.name);
   }
 
+  // Portal do cliente: contatos com acesso (senha de dev igual).
+  async function portalUser(
+    clientName: string,
+    email: string,
+    name: string,
+    flags: Partial<d.ContactFlags> = {},
+  ) {
+    let [contact] = await db
+      .select({ id: s.clientContacts.id })
+      .from(s.clientContacts)
+      .innerJoin(s.people, eq(s.people.id, s.clientContacts.personId))
+      .where(and(eq(s.clientContacts.clientId, clients[clientName]!.clientId), eq(s.people.email, email)));
+    if (!contact) contact = await d.addContact(ctx, clients[clientName]!.clientId, { name, email, ...flags });
+    await db.insert(s.users).values({ email, name, emailVerified: true }).onConflictDoNothing();
+    const [u] = await db.select().from(s.users).where(eq(s.users.email, email));
+    await db.insert(s.authAccounts).values({
+      userId: u!.id,
+      accountId: u!.id,
+      providerId: 'credential',
+      password: await hashPassword(DEMO_PASSWORD),
+    });
+    await db.update(s.clientContacts).set({ userId: u!.id }).where(eq(s.clientContacts.id, contact.id));
+  }
+  await portalUser('Terra Mar', 'contato@terramar.demo.local', 'Contato Terra');
+  await portalUser('Terra Mar', 'ana@terramar.demo.local', 'Ana · marketing Terra Mar', {
+    canApprove: false,
+    canComment: true,
+    canRequest: true,
+  });
+  await portalUser('Café Aurora', 'contato@cafeaurora.demo.local', 'Contato Café');
+  log('portal: 3 contatos com acesso');
+
   // Pagamentos: tudo vencido foi pago, exceto Clínica Vitta (2 atrasadas). Competência atual fica a receber.
   const invoices = await db.select().from(s.invoices).where(eq(s.invoices.workspaceId, w4p.id));
   const lia = await as(team.lia);

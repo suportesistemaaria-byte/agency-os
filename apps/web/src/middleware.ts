@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 const PUBLIC = [
+  '/portal/login',
   '/api/invites',
   '/login',
   '/recuperar-senha',
@@ -21,7 +22,7 @@ export function middleware(req: NextRequest) {
   if (!hasSession) {
     if (pathname.startsWith('/api/')) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     const url = req.nextUrl.clone();
-    url.pathname = '/login';
+    url.pathname = pathname.startsWith('/portal') ? '/portal/login' : '/login';
     url.searchParams.set('next', pathname);
     return NextResponse.redirect(url);
   }

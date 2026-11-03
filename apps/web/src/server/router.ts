@@ -2,7 +2,7 @@ import 'server-only';
 import { z } from 'zod';
 import * as d from '@aos/domain';
 import { schema as s } from '@aos/db';
-import { protectedProcedure as p, router } from './trpc';
+import { portalProcedure as pp, protectedProcedure as p, router } from './trpc';
 
 const id = z.string().uuid();
 const date = z.coerce.date();
@@ -525,6 +525,42 @@ export const appRouter = router({
       .input(z.object({ ids: z.array(id).optional() }))
       .mutation(({ ctx, input }) => d.markNotificationsRead(ctx.ctx, input.ids)),
   }),
+  portal: router({
+    approve: pp
+      .input(z.object({ ids: z.array(id).min(1) }))
+      .mutation(({ ctx, input }) => d.portalApprove(ctx.portal, input.ids)),
+    requestChange: pp
+      .input(
+        z.object({
+          id,
+          comment: z.string().optional(),
+          annotations: z
+            .array(
+              z.object({
+                assetIndex: z.number().int().optional(),
+                xPct: z.number().min(0).max(100).optional(),
+                yPct: z.number().min(0).max(100).optional(),
+                body: z.string().min(1),
+              }),
+            )
+            .optional(),
+        }),
+      )
+      .mutation(({ ctx, input: { id: cid, ...rest } }) => d.portalRequestChange(ctx.portal, cid, rest)),
+    createRequest: pp
+      .input(
+        z.object({
+          type: z.enum(s.requestType.enumValues),
+          title: z.string().min(1),
+          description: z.string().optional(),
+          urgent: z.boolean().optional(),
+        }),
+      )
+      .mutation(({ ctx, input }) => d.portalCreateRequest(ctx.portal, input)),
+  }),
+  portalInvite: p
+    .input(z.object({ contactId: id }))
+    .mutation(({ ctx, input }) => d.createPortalInvite(ctx.ctx, input.contactId)),
   search: p.input(z.object({ q: z.string() })).query(({ ctx, input }) => d.search(ctx.ctx, input.q)),
 });
 

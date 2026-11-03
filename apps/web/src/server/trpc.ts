@@ -4,9 +4,12 @@ import superjson from 'superjson';
 import { ZodError } from 'zod';
 import { DomainError, type Ctx } from '@aos/domain';
 import { logger } from '@aos/logger';
-import { getCtx } from './session';
+import { getCtx, getPortalCtx } from './session';
 
-export const createContext = async () => ({ ctx: await getCtx() });
+export const createContext = async () => {
+  const ctx = await getCtx();
+  return { ctx, portal: ctx ? null : await getPortalCtx() };
+};
 
 const t = initTRPC.context<Awaited<ReturnType<typeof createContext>>>().create({
   transformer: superjson,
@@ -46,4 +49,10 @@ export const publicProcedure = t.procedure.use(errors);
 export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
   if (!ctx.ctx) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Faça login.' });
   return next({ ctx: { ctx: ctx.ctx as Ctx } });
+});
+
+/** Procedimentos do portal: só para contato de cliente (a RLS restritiva limita ao cliente dele). */
+export const portalProcedure = publicProcedure.use(({ ctx, next }) => {
+  if (!ctx.portal) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Faça login no portal.' });
+  return next({ ctx: { portal: ctx.portal } });
 });

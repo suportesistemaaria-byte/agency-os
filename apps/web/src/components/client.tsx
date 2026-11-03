@@ -74,7 +74,8 @@ export function useAction() {
               : undefined,
           });
         if (opts.refresh !== false) start(() => router.refresh());
-        return r;
+        // Sucesso nunca devolve undefined (undefined = falha): mutações sem retorno viram `true`.
+        return (r === undefined ? true : r) as T;
       } catch (e) {
         toast({ text: (e as Error).message || 'Algo deu errado.', tone: 'bad' });
         return undefined;

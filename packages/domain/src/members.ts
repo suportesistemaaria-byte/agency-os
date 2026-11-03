@@ -211,7 +211,13 @@ export async function listInvites(ctx: Ctx) {
     tx
       .select()
       .from(s.invitations)
-      .where(and(isNull(s.invitations.acceptedAt), isNull(s.invitations.revokedAt))),
+      .where(
+        and(
+          isNull(s.invitations.acceptedAt),
+          isNull(s.invitations.revokedAt),
+          eq(s.invitations.kind, 'member'),
+        ),
+      ),
   );
 }
 
@@ -240,6 +246,30 @@ export async function acceptInvite(token: string, userId: string) {
   if (!inv) throw badRequest('Convite inválido ou expirado.');
   const ws = inv.i.workspaceId;
   const ctx = { workspaceId: ws, userId, actorType: 'user' as const };
+  if (inv.i.kind === 'portal') {
+    await runCommand('portal.acceptInvite', { ...ctx, actorType: 'client_contact' }, async (kit) => {
+      const [ct] = await kit.tx
+        .select()
+        .from(s.clientContacts)
+        .where(eq(s.clientContacts.id, inv.i.contactId!));
+      if (!ct || (ct.userId && ct.userId !== userId)) throw badRequest('Contato inválido para este convite.');
+      await kit.tx
+        .update(s.clientContacts)
+        .set({ userId, updatedAt: new Date() })
+        .where(eq(s.clientContacts.id, ct.id));
+      await kit.tx
+        .update(s.invitations)
+        .set({ acceptedAt: new Date() })
+        .where(eq(s.invitations.id, inv.i.id));
+      await kit.audit({
+        action: 'portal.joined',
+        entityType: 'client_contact',
+        entityId: ct.id,
+        after: { userId },
+      });
+    });
+    return { workspaceId: ws, portal: true };
+  }
   await runCommand('members.acceptInvite', ctx, async (kit) => {
     const { tx } = kit;
     const [m] = await tx
@@ -270,7 +300,7 @@ export async function acceptInvite(token: string, userId: string) {
       payload: { memberId: m!.id },
     });
   });
-  return { workspaceId: ws };
+  return { workspaceId: ws, portal: false };
 }
 
 export async function memberOptions(ctx: Ctx) {

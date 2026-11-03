@@ -27,3 +27,4 @@ export * as fmt from './format';
 export * from './labels';
 export * from './finance-plus';
 export * from './management';
+export * from './portal';
