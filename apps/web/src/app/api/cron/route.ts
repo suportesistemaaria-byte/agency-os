@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
-import { kickDispatcher, markOverdueInvoices, slaTick } from '@aos/domain';
+import {
+  generateRecurringExpenses,
+  kickDispatcher,
+  markOverdueInvoices,
+  monthlyBilling,
+  slaTick,
+} from '@aos/domain';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +15,8 @@ export async function POST() {
     return NextResponse.json({ error: 'disabled' }, { status: 404 });
   const sla = await slaTick();
   const overdue = await markOverdueInvoices();
+  const billed = await monthlyBilling();
+  const recurring = await generateRecurringExpenses();
   const drained = await kickDispatcher();
-  return NextResponse.json({ sla, overdue, drained });
+  return NextResponse.json({ sla, overdue, billed, recurring, drained });
 }

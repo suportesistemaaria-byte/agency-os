@@ -1,4 +1,4 @@
-import { listClientsBasic, listInvoices } from '@aos/domain';
+import { listClientsBasic, listInvoices, listReceipts } from '@aos/domain';
 import { INVOICE_STATUS_LABEL } from '@aos/domain/labels';
 import { dateFull, money } from '@aos/domain/format';
 import { requirePerm } from '@/server/session';
@@ -56,61 +56,77 @@ export default async function ReceivablesPage({ searchParams }: { searchParams: 
             { key: 'overdue', label: 'Atrasadas', href: '?s=overdue' },
             { key: 'paid', label: 'Pagas', href: '?s=paid' },
             { key: 'all', label: 'Todas', href: '?s=all' },
+            { key: 'receipts', label: 'Recebimentos', href: '?s=receipts' },
           ]}
         />
       </div>
-      <Table
-        head={[
-          'Fatura',
-          'Cliente',
-          'Descrição',
-          'Competência',
-          'Vencimento',
-          'Valor',
-          'Pago',
-          'Saldo',
-          'Status',
-          '',
-        ]}
-      >
-        {rows.map((i) => (
-          <tr key={i.id} className="hover:bg-side">
-            <td className="font-mono">{i.number}</td>
-            <td className="font-medium">{i.clientName}</td>
-            <td className="text-muted">{i.description}</td>
-            <td className="font-mono">{i.competence}</td>
-            <td>{dateFull(i.dueOn)}</td>
-            <td className="num">{money(i.amountCents)}</td>
-            <td className="num">{money(i.paidCents)}</td>
-            <td className="num font-medium">{money(i.amountCents - i.paidCents)}</td>
-            <td>
-              <Pill
-                tone={
-                  i.status === 'paid'
-                    ? 'ok'
-                    : i.status === 'overdue'
-                      ? 'bad'
-                      : i.status === 'cancelled'
-                        ? 'neutral'
-                        : 'warn'
-                }
-              >
-                {INVOICE_STATUS_LABEL[i.status]}
-              </Pill>
-            </td>
-            <td>
-              {canEdit && i.status !== 'paid' && i.status !== 'cancelled' && (
-                <InvoiceActions
-                  id={i.id}
-                  number={i.number}
-                  balance={i.amountCents - i.paidCents}
-                  hasPayments={i.paidCents > 0}
-                />
-              )}
-            </td>
-          </tr>
-        ))}
-      </Table>
+      {st === 'receipts' ? (
+        <Table head={['Data', 'Cliente', 'Fatura', 'Descrição', 'Forma', 'Valor']}>
+          {(await listReceipts(ctx)).map((r) => (
+            <tr key={r.p.id}>
+              <td>{dateFull(r.p.paidOn)}</td>
+              <td className="font-medium">{r.client}</td>
+              <td className="font-mono">{r.number}</td>
+              <td className="text-muted">{r.description}</td>
+              <td>{r.p.method ?? '—'}</td>
+              <td className="num font-medium text-ok">{money(r.p.amountCents)}</td>
+            </tr>
+          ))}
+        </Table>
+      ) : (
+        <Table
+          head={[
+            'Fatura',
+            'Cliente',
+            'Descrição',
+            'Competência',
+            'Vencimento',
+            'Valor',
+            'Pago',
+            'Saldo',
+            'Status',
+            '',
+          ]}
+        >
+          {rows.map((i) => (
+            <tr key={i.id} className="hover:bg-side">
+              <td className="font-mono">{i.number}</td>
+              <td className="font-medium">{i.clientName}</td>
+              <td className="text-muted">{i.description}</td>
+              <td className="font-mono">{i.competence}</td>
+              <td>{dateFull(i.dueOn)}</td>
+              <td className="num">{money(i.amountCents)}</td>
+              <td className="num">{money(i.paidCents)}</td>
+              <td className="num font-medium">{money(i.amountCents - i.paidCents)}</td>
+              <td>
+                <Pill
+                  tone={
+                    i.status === 'paid'
+                      ? 'ok'
+                      : i.status === 'overdue'
+                        ? 'bad'
+                        : i.status === 'cancelled'
+                          ? 'neutral'
+                          : 'warn'
+                  }
+                >
+                  {INVOICE_STATUS_LABEL[i.status]}
+                </Pill>
+              </td>
+              <td>
+                {canEdit && i.status !== 'paid' && i.status !== 'cancelled' && (
+                  <InvoiceActions
+                    id={i.id}
+                    number={i.number}
+                    balance={i.amountCents - i.paidCents}
+                    hasPayments={i.paidCents > 0}
+                  />
+                )}
+              </td>
+            </tr>
+          ))}
+        </Table>
+      )}
     </div>
   );
 }

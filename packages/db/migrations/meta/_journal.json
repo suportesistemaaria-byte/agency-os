@@ -43,6 +43,13 @@
       "when": 1793606700000,
       "tag": "0005_auth_two_factor",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793606760000,
+      "tag": "0006_finance_complete",
+      "breakpoints": true
     }
   ]
 }

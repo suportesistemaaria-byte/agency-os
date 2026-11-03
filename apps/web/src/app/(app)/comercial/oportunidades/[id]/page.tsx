@@ -12,6 +12,7 @@ import {
   ProposalActions,
   NewProposal,
   ConvertButton,
+  AmendButton,
 } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -64,8 +65,11 @@ export default async function OpportunityPage({
         </div>
         {canEdit && (
           <div className="flex flex-wrap gap-2">
-            {op.state === 'won' && !op.convertedClientId && (
+            {op.state === 'won' && !op.convertedClientId && op.type === 'new' && (
               <ConvertButton opportunityId={op.id} members={members} />
+            )}
+            {op.state === 'won' && !op.convertedClientId && op.type !== 'new' && (
+              <AmendButton opportunityId={op.id} />
             )}
             {op.convertedClientId && (
               <Link

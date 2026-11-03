@@ -30,6 +30,7 @@ export function NewExpense({ categories }: { categories: { id: string; name: str
     amount: '',
     dueOn: today(),
     paid: '0',
+    recurring: '0',
   });
   return (
     <>
@@ -56,6 +57,7 @@ export function NewExpense({ categories }: { categories: { id: string; name: str
                       amountCents: parseMoney(v.amount),
                       dueOn: v.dueOn,
                       paidOn: v.paid === '1' ? v.dueOn : null,
+                      recurring: v.recurring === '1' ? 'monthly' : null,
                     }),
                   'Despesa registrada.',
                 ).then((r) => r !== undefined && setOpen(false))
@@ -93,6 +95,12 @@ export function NewExpense({ categories }: { categories: { id: string; name: str
             <Select value={v.paid} onChange={(e) => setV({ ...v, paid: e.target.value })}>
               <option value="0">A pagar</option>
               <option value="1">Já paga</option>
+            </Select>
+          </Field>
+          <Field label="Recorrência">
+            <Select value={v.recurring} onChange={(e) => setV({ ...v, recurring: e.target.value })}>
+              <option value="0">Única</option>
+              <option value="1">Mensal (gera a próxima automaticamente)</option>
             </Select>
           </Field>
         </div>

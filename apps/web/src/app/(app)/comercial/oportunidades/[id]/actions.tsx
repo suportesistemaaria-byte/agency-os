@@ -522,3 +522,22 @@ export function ConvertButton({
     </>
   );
 }
+
+/** Upsell/renovação ganhos: aditivo no contrato vigente (histórico preservado). */
+export function AmendButton({ opportunityId }: { opportunityId: string }) {
+  const { run, pending } = useAction();
+  return (
+    <Button
+      variant="primary"
+      disabled={pending}
+      onClick={() =>
+        run(
+          () => api.finance.applyAmendment.mutate({ opportunityId }),
+          'Aditivo aplicado ao contrato do cliente.',
+        )
+      }
+    >
+      Aplicar aditivo ao contrato
+    </Button>
+  );
+}

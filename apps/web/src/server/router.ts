@@ -373,6 +373,11 @@ const finance = router({
   confirmContract: p
     .input(z.object({ id }))
     .mutation(({ ctx, input }) => d.confirmContract(ctx.ctx, input.id)),
+  applyAmendment: p
+    .input(z.object({ opportunityId: id, effectiveOn: day.optional() }))
+    .mutation(({ ctx, input }) =>
+      d.applyAmendment(ctx.ctx, input.opportunityId, { effectiveOn: input.effectiveOn }),
+    ),
   recordPayment: p
     .input(
       z.object({
@@ -401,6 +406,7 @@ const finance = router({
         amountCents: cents.positive(),
         dueOn: day,
         paidOn: day.nullable().optional(),
+        recurring: z.enum(['monthly']).nullable().optional(),
       }),
     )
     .mutation(({ ctx, input }) => d.createExpense(ctx.ctx, input)),

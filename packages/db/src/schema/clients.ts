@@ -237,6 +237,8 @@ export const contractItems = pgTable(
     workspaceId: ws(),
     contractId: uuid('contract_id').notNull(),
     serviceId: uuid('service_id'),
+    /** Item incluído por aditivo (upsell/renovação). */
+    amendmentId: uuid('amendment_id'),
     description: text('description').notNull(),
     kind: itemKind('kind').notNull(),
     amountCents: cents('amount_cents').notNull(),
@@ -246,5 +248,30 @@ export const contractItems = pgTable(
     wsUnique('contract_items', t),
     wsFk('contract_items', t, t.contractId, contracts),
     wsFk('contract_items', t, t.serviceId, services),
+  ],
+);
+
+/** Aditivo: upsell/renovação ganhos alteram o contrato sem perder o histórico (V3). */
+export const contractAmendments = pgTable(
+  'contract_amendments',
+  {
+    id: id(),
+    workspaceId: ws(),
+    contractId: uuid('contract_id').notNull(),
+    opportunityId: uuid('opportunity_id').unique(),
+    kind: text('kind').notNull(),
+    description: text('description').notNull(),
+    mrrDeltaCents: cents('mrr_delta_cents').notNull().default(0),
+    setupCents: cents('setup_cents').notNull().default(0),
+    previousEndOn: date('previous_end_on'),
+    newEndOn: date('new_end_on'),
+    effectiveOn: date('effective_on').notNull(),
+    createdBy: uuid('created_by'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    wsUnique('contract_amendments', t),
+    wsFk('contract_amendments', t, t.contractId, contracts),
+    wsFk('contract_amendments', t, t.opportunityId, opportunities),
   ],
 );

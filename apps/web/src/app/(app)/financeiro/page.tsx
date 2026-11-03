@@ -1,4 +1,5 @@
-import { financeOverview } from '@aos/domain';
+import Link from 'next/link';
+import { cashFlow, delinquency, financeOverview, resultByCategory } from '@aos/domain';
 import { dateShort, money } from '@aos/domain/format';
 import { requirePerm } from '@/server/session';
 import { Card, PageHeader, Pill, Stats, cx } from '@/components/ui';
@@ -8,7 +9,12 @@ export const dynamic = 'force-dynamic';
 
 export default async function FinanceOverview() {
   const ctx = await requirePerm('financeiro.view');
-  const f = await financeOverview(ctx);
+  const [f, dl, cf, dre] = await Promise.all([
+    financeOverview(ctx),
+    delinquency(ctx),
+    cashFlow(ctx),
+    resultByCategory(ctx),
+  ]);
   const s = f.summary;
   const max = Math.max(1, ...f.series.flatMap((x) => [x.receivedCents, x.expensesCents]));
   const label = new Date(`${f.period}-15T12:00:00Z`).toLocaleDateString('pt-BR', {
@@ -84,6 +90,40 @@ export default async function FinanceOverview() {
           },
         ]}
       />
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <Link
+          href="/financeiro/inadimplencia"
+          className="rounded-[10px] border border-line p-4 hover:bg-side"
+        >
+          <div className="text-[12px] text-muted">Inadimplência</div>
+          <div className="num mt-1 text-[20px] font-semibold text-bad">{money(dl.totals.totalCents)}</div>
+          <div className="text-[12px] text-faint">
+            {dl.clients.length} cliente(s) · {(dl.rate * 100).toFixed(1)}% do em aberto
+          </div>
+        </Link>
+        <Link
+          href="/financeiro/fluxo-de-caixa"
+          className="rounded-[10px] border border-line p-4 hover:bg-side"
+        >
+          <div className="text-[12px] text-muted">Saldo projetado em 12 semanas</div>
+          <div className="num mt-1 text-[20px] font-semibold">
+            {money(cf.projected.at(-1)?.balanceCents ?? 0)}
+          </div>
+          <div className="text-[12px] text-faint">realizado + a receber − a pagar</div>
+        </Link>
+        <Link
+          href="/financeiro/fluxo-de-caixa"
+          className="rounded-[10px] border border-line p-4 hover:bg-side"
+        >
+          <div className="text-[12px] text-muted">Resultado da competência</div>
+          <div className={`num mt-1 text-[20px] font-semibold ${dre.resultCents < 0 ? 'text-bad' : ''}`}>
+            {money(dre.resultCents)}
+          </div>
+          <div className="text-[12px] text-faint">
+            faturado − despesas ({dre.categories.length} categorias)
+          </div>
+        </Link>
+      </div>
       <div className="grid gap-6 xl:grid-cols-[1fr_440px]">
         <Card
           title="Receitas e despesas"

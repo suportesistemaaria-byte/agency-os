@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { listContracts } from '@aos/domain';
+import { listAmendments, listContracts } from '@aos/domain';
 import { dateFull, money } from '@aos/domain/format';
 import { requirePerm } from '@/server/session';
 import { PageHeader, Pill, Stats, Table } from '@/components/ui';
@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 export default async function ContractsPage() {
   const ctx = await requirePerm('financeiro.view');
   const rows = await listContracts(ctx);
+  const amendments = await listAmendments(ctx);
   const active = rows.filter((r) => r.status === 'active');
   const pending = rows.filter((r) => r.status === 'pending_finance_confirmation');
   return (
@@ -33,7 +34,14 @@ export default async function ContractsPage() {
       <Table head={['Contrato', 'Cliente', 'Vigência', 'Cobrança', 'Setup', 'MRR', 'Status', '']}>
         {rows.map((c) => (
           <tr key={c.id} className="hover:bg-side">
-            <td className="font-mono">{c.number}</td>
+            <td className="font-mono">
+              {c.number}
+              {amendments.some((a) => a.contractId === c.id) && (
+                <div className="text-[11px] text-faint">
+                  {amendments.filter((a) => a.contractId === c.id).length} aditivo(s)
+                </div>
+              )}
+            </td>
             <td>
               <Link href={`/clientes/${c.clientId}`} className="font-medium">
                 {c.clientName}
@@ -62,6 +70,24 @@ export default async function ContractsPage() {
           </tr>
         ))}
       </Table>
+      {amendments.length > 0 && (
+        <div className="mt-6">
+          <h2 className="mb-2 text-[15px] font-semibold">Aditivos</h2>
+          <Table head={['Data', 'Contrato', 'Tipo', 'Descrição', 'Δ MRR', 'Setup', 'Nova vigência']}>
+            {amendments.map((a) => (
+              <tr key={a.id}>
+                <td>{dateFull(a.effectiveOn)}</td>
+                <td className="font-mono">{rows.find((r) => r.id === a.contractId)?.number}</td>
+                <td>{a.kind === 'upsell' ? 'Upsell' : 'Renovação'}</td>
+                <td>{a.description}</td>
+                <td className="num text-ok">+{money(a.mrrDeltaCents)}</td>
+                <td className="num">{money(a.setupCents)}</td>
+                <td>{a.newEndOn ? dateFull(a.newEndOn) : '—'}</td>
+              </tr>
+            ))}
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

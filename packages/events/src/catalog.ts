@@ -44,6 +44,7 @@ export const EVENT_CATALOG = {
   'contract.created': e({ contractId: id, clientId: id }),
   'contract.confirmed': e({ contractId: id, clientId: id }),
   'contract.expiring': e({ contractId: id, clientId: id, daysLeft: z.number().int() }),
+  'contract.amended': e({ contractId: id, clientId: id, amendmentId: id, kind: z.string() }),
   // Operação
   'request.created': e({ requestId: id, clientId: id, type: z.string() }),
   'request.triaged': e({ requestId: id, assigneeId: opt }),

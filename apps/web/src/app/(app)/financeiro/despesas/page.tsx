@@ -54,7 +54,10 @@ export default async function ExpensesPage() {
       >
         {[...open, ...rows.filter((r) => r.e.paidOn).reverse()].map(({ e, category, kind }) => (
           <tr key={e.id} className="hover:bg-side">
-            <td className="font-medium">{e.description}</td>
+            <td className="font-medium">
+              {e.description}
+              {e.recurring === 'monthly' && <span className="ml-1.5 text-[11px] text-faint">↻ mensal</span>}
+            </td>
             <td>{e.supplier ?? '—'}</td>
             <td>
               {category ?? '—'}{' '}

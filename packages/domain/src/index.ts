@@ -25,3 +25,4 @@ export * from './settings';
 export * from './search';
 export * as fmt from './format';
 export * from './labels';
+export * from './finance-plus';

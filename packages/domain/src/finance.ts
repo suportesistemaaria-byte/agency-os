@@ -247,6 +247,7 @@ export async function createExpense(
     dueOn: string;
     competence?: string;
     paidOn?: string | null;
+    recurring?: 'monthly' | null;
   },
 ) {
   assertCan(ctx, 'financeiro.edit');
@@ -262,6 +263,7 @@ export async function createExpense(
         dueOn: input.dueOn,
         competence: input.competence ?? input.dueOn.slice(0, 7),
         paidOn: input.paidOn ?? null,
+        recurring: input.recurring ?? null,
         createdBy: ctx.userId,
       })
       .returning();

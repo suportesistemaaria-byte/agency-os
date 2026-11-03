@@ -795,6 +795,7 @@ async function main() {
         amountCents: cents,
         dueOn: due(day),
         paidOn: paid ? due(day) : null,
+        recurring: ['Pessoal', 'Software', 'Administrativo'].includes(catName) ? 'monthly' : null,
       });
     }
   }
