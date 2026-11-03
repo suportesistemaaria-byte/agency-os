@@ -27,8 +27,34 @@ export class LocalDiskStorage implements StorageAdapter {
   }
 }
 
+/**
+ * Adaptador em Postgres (tabela file_blobs) para ambientes sem disco persistente e sem R2 (ex.: demo na Vercel).
+ * Limite de 25 MB por arquivo; vídeos grandes exigem o R2.
+ */
+export class PostgresStorage implements StorageAdapter {
+  async put(key: string, bytes: Uint8Array): Promise<void> {
+    if (bytes.byteLength > 25 * 1024 * 1024)
+      throw new Error('Arquivo acima de 25 MB: configure o R2 para arquivos grandes.');
+    const { adminDb } = await import('@aos/db');
+    const { sql } = await import('drizzle-orm');
+    await adminDb().execute(
+      sql`insert into file_blobs (storage_key, bytes) values (${key}, ${Buffer.from(bytes)}) on conflict (storage_key) do nothing`,
+    );
+  }
+  async get(key: string): Promise<Uint8Array> {
+    const { adminDb } = await import('@aos/db');
+    const { sql } = await import('drizzle-orm');
+    const r = await adminDb().execute<{ bytes: Buffer }>(
+      sql`select bytes from file_blobs where storage_key = ${key}`,
+    );
+    if (!r.rows[0]) throw new Error('Arquivo não encontrado no storage.');
+    return new Uint8Array(r.rows[0].bytes);
+  }
+}
+
 let adapter: StorageAdapter | undefined;
-export const storage = (): StorageAdapter => (adapter ??= new LocalDiskStorage());
+export const storage = (): StorageAdapter =>
+  (adapter ??= process.env.STORAGE_DRIVER === 'db' ? new PostgresStorage() : new LocalDiskStorage());
 export const setStorage = (a: StorageAdapter) => {
   adapter = a;
 };

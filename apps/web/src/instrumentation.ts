@@ -15,8 +15,14 @@ export async function register(): Promise<void> {
         snapshotHealth,
         checkExpiringContracts,
       } = await import('@aos/domain');
+      const { after } = await import('next/server');
       setAfterCommitHook(async () => {
-        void kickDispatcher();
+        // Em serverless (Vercel) o processo pode congelar após a resposta: after() mantém o despacho vivo.
+        try {
+          after(() => kickDispatcher());
+        } catch {
+          void kickDispatcher();
+        }
       });
       if (process.env.NEXT_PHASE !== 'phase-production-build') {
         const tick = async () => {

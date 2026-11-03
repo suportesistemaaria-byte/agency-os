@@ -7,13 +7,15 @@ on:
 jobs:
   migrate:
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm db:migrate
+      - name: Migrar (se o banco já estiver configurado)
         env:
           DATABASE_ADMIN_URL: ${{ secrets.DATABASE_ADMIN_URL }}
+        run: |
+          if [ -z "$DATABASE_ADMIN_URL" ]; then echo "Segredo DATABASE_ADMIN_URL ainda não configurado: nada a migrar."; exit 0; fi
+          pnpm db:migrate

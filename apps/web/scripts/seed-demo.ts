@@ -10,7 +10,8 @@ import * as d from '@aos/domain';
 import { calculateDueAt, type SlaPolicy } from '@aos/sla';
 import { makePng } from './png';
 
-export const DEMO_PASSWORD = 'demo1234';
+/** Senha de dev; em ambiente publicado defina DEMO_PASSWORD (o seed nunca grava a senha em texto). */
+export const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo1234';
 const db = adminDb();
 const log = (...a: unknown[]) => console.log('·', ...a);
 
@@ -928,7 +929,9 @@ async function main() {
   await drain();
   log('despesas');
   await d.snapshotHealth();
-  log(`Pronto. Usuários: *@demo.local · senha de dev: ${DEMO_PASSWORD}`);
+  log(
+    `Pronto. Usuários: *@demo.local · senha: ${process.env.DEMO_PASSWORD ? '(definida em DEMO_PASSWORD)' : DEMO_PASSWORD}`,
+  );
 }
 
 main()

@@ -1,0 +1,36 @@
+# Prepara o banco do ambiente publicado (Neon): papel da aplicação, migrações e, opcionalmente, a demonstração.
+# Rode em: Actions → "Preparar banco (Neon)" → Run workflow. Segredos em Settings → Secrets and variables → Actions.
+name: Preparar banco (Neon)
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: 'Carregar os dados de demonstração (fictícios)?'
+        type: boolean
+        default: true
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: preview
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_ADMIN_URL: ${{ secrets.DATABASE_ADMIN_URL }}
+      APP_DB_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+      STORAGE_DRIVER: db
+      LOG_LEVEL: warn
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Conferir segredos
+        run: |
+          for v in DATABASE_URL DATABASE_ADMIN_URL APP_DB_PASSWORD; do
+            if [ -z "${!v}" ]; then echo "Falta o segredo $v (Settings → Secrets and variables → Actions)."; exit 1; fi
+          done
+      - run: pnpm db:roles
+      - run: pnpm db:migrate
+      - if: ${{ inputs.seed }}
+        run: pnpm db:seed

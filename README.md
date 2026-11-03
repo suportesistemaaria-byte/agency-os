@@ -5,6 +5,10 @@ A **arquitetura técnica V3** (`docs/ARCHITECTURE.md`) é a fonte de verdade. De
 
 Status: **Blocos 1 a 12 implementados** (CHECKPOINT 1 em `docs/CHECKPOINT-1.md`; entrega final em `docs/ENTREGA-FINAL.md`). Equipe: `manuella@demo.local` · Portal: `contato@cafeaurora.demo.local` (senha de dev `demo1234`).
 
+## Publicar online
+
+Passo a passo sem instalar nada: [`docs/DEPLOY-VERCEL.md`](docs/DEPLOY-VERCEL.md) (Neon + Vercel, plano gratuito).
+
 ## Requisitos
 
 - Node 20.11+ (`.nvmrc`) e pnpm 9 (`corepack enable`)

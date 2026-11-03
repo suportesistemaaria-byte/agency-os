@@ -72,6 +72,16 @@
 | Canais                   | in-app sempre; e-mail por adaptador (log em dev); WhatsApp por adaptador desligado (`WHATSAPP_ENABLED`); `notification_deliveries` único por (notificação, canal) | V3, seções 10 e 11; nenhum envio duplicado                                        |
 | contract.expiring        | cron emite uma vez por contrato e marco (90/60/30/15/7 dias, por faixa); regra cria a oportunidade de renovação uma única vez                                     | V3, seção 9                                                                       |
 
+## Decisões para a demonstração online (Neon + Vercel)
+
+| Tema                  | Escolha                                                                                                   | Motivo                                                        |
+| --------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Arquivos sem R2       | `STORAGE_DRIVER=db`: bytes em `file_blobs` (até 25 MB), metadados seguem em `files` com RLS               | A Vercel não tem disco persistente; o R2 troca só o adaptador |
+| Eventos em serverless | despacho local agendado com `after()` do Next ao fim da requisição; cron da Vercel como rede de segurança | Sem Inngest na demo; nenhum evento se perde (outbox)          |
+| Cron                  | `/api/cron` exige `CRON_SECRET` fora de dev; 1×/dia no plano gratuito                                     | Proteção e limite do plano Hobby                              |
+| Preparar banco        | workflow manual "Preparar banco (Neon)" (papel, migrações, seed) com segredos do GitHub                   | Sem precisar de computador local                              |
+| Senha da demo         | `DEMO_PASSWORD` no seed (padrão `demo1234` só local)                                                      | Não publicar senha conhecida                                  |
+
 ## Pendentes de confirmação (não bloqueiam a Sprint 1)
 
 - Repositório Git e organização Vercel/Neon/Inngest/Sentry em nome da Agência 4P.

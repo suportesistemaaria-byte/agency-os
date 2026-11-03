@@ -25,6 +25,10 @@ export const serverSchema = z.object({
   EVENT_DISPATCH: z.enum(['local', 'inngest']).default('local'),
   STORAGE_DIR: optional,
   WHATSAPP_ENABLED: z.enum(['0', '1']).default('0'),
+  /** disk = pasta local (dev); db = Postgres (demo sem R2); r2 entra com o adaptador do R2. */
+  STORAGE_DRIVER: z.enum(['disk', 'db']).default('disk'),
+  /** Segredo que a Vercel envia no cron (Authorization: Bearer). */
+  CRON_SECRET: optional,
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;
